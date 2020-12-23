@@ -30,6 +30,7 @@ export interface NotificationExtensionPlugin extends PushNotificationsPlugin {
   /**
    * Save the range of time to SQLite to filtering push notification when it is received.
    * Push notification won't shown when current time is out of range.
+   * Time format should be a 24 hour clock like HH:mm, in user's timezone.
    * @param options
    */
   addTimeFilter(options: { startFrom: string, endAt: string }): Promise<void>
