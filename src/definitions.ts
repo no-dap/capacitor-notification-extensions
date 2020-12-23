@@ -32,12 +32,12 @@ export interface NotificationExtensionPlugin extends PushNotificationsPlugin {
    * Push notification won't shown when current time is out of range.
    * @param options
    */
-  AddTimeFilter(options: { startFrom: string, endAt: string }): Promise<void>
+  addTimeFilter(options: { startFrom: string, endAt: string }): Promise<void>
   /**
    * Save the key - boolean field to SQLite to filtering push notification when it is received.
    * Push notification won't shown when any of the value from matched keys is false.
    * Extra is unique together with key, for more detail up filtering.
    * @param options
    */
-  AddFilter(options: { key: string, value: boolean, extra?: string }): Promise<void>
+  addFilter(options: { key: string, value: boolean, extra?: string }): Promise<void>
 }
