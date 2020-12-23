@@ -60,5 +60,6 @@
   },
   "bugs": {
     "url": "https://gitlab.com/wootdevelop/capacitor-notification-extensions/issues"
-  }
+  },
+  "dependencies": {}
 }
