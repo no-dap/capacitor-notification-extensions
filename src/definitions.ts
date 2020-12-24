@@ -36,9 +36,9 @@ export interface NotificationExtensionPlugin extends PushNotificationsPlugin {
   addTimeFilter(options: { startFrom: string, endAt: string }): Promise<void>
   /**
    * Save the key - boolean field to SQLite to filtering push notification when it is received.
-   * Push notification won't shown when any of the value from matched keys is false.
-   * Extra is unique together with key, for more detail up filtering.
+   * Push notification won't shown when any of the value from matched keys exists.
+   * Can detailed filter with saved value.
    * @param options
    */
-  addFilter(options: { key: string, value: boolean, extra?: string }): Promise<void>
+  addFilter(options: { key: string, value: string }): Promise<void>
 }

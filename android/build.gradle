@@ -5,16 +5,20 @@ ext {
 }
 
 buildscript {
+    ext.kotlin_version = '1.4.30-M1'
     repositories {
         google()
         jcenter()
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.6.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 29
@@ -40,6 +44,7 @@ repositories {
     google()
     jcenter()
     mavenCentral()
+    maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
 }
 
 
@@ -49,4 +54,10 @@ dependencies {
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation "androidx.core:core-ktx:1.3.2"
+    implementation "androidx.sqlite:sqlite:2.1.0"
+    implementation "com.google.firebase:firebase-core:18.0.0"
+    implementation "com.google.firebase:firebase-messaging:21.0.1"
+    implementation 'net.zetetic:android-database-sqlcipher:4.4.0@aar'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
