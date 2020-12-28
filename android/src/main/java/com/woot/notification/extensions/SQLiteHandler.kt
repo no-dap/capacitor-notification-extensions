@@ -62,7 +62,7 @@ class SQLiteHandler(private var context: Context) {
         if (::mdb.isInitialized) {
             val statement = StringBuilder("SELECT * FROM ")
                     .append(tableName)
-                    .append(" WHERE key NOT IN ('filter_start_from', 'filter_end_at);")
+                    .append(" WHERE key NOT IN ('filter_start_from', 'filter_end_at');")
                     .toString()
             return mdb.querySQL(statement, null)
         } else {
@@ -113,7 +113,7 @@ class SQLiteHandler(private var context: Context) {
     fun insertFilter(key: String): Map<String, Any> {
         return if (::mdb.isInitialized) {
             try {
-                val statement = StringBuilder("INSERT OR REPLACE INTO")
+                val statement = StringBuilder("INSERT OR REPLACE INTO ")
                         .append(tableName)
                         .append(" (key, value) VALUES ")
                         .append("('$key', 'false');")

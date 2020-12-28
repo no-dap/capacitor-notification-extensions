@@ -76,13 +76,15 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         sqLiteHandler.createFilterTable()
         val currentTime = getCurrentTimeString()
         val timeFilters = sqLiteHandler.getTimeFilter().toList<JSObject>()
-        val startFrom: String? = (timeFilters.find { timeFilter ->
+        val startTimeFilter: JSObject? = timeFilters.find { timeFilter ->
             timeFilter["key"] == "filter_start_from"
-        } as JSObject).getString("value")
-        val endAt: String? = (timeFilters.find { timeFilter ->
+        }
+        val endTimeFilter: JSObject? = timeFilters.find { timeFilter ->
             timeFilter["key"] == "filter_end_at"
-        } as JSObject).getString("value")
-        return if (startFrom != null && endAt != null) {
+        }
+        return if (startTimeFilter != null && endTimeFilter != null) {
+            val startFrom: String = startTimeFilter.getString("value")
+            val endAt: String = endTimeFilter.getString("value")
             compareTimeString(currentTime, startFrom) && compareTimeString(endAt, currentTime)
         } else {
             true
@@ -90,10 +92,11 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun isValidCondition(filters: String?): Boolean {
-        if (filters == null) {
-            return true
+        var filterString: String = filters ?: return true
+        if (filterString.endsWith(',')) {
+            filterString = filterString.substring(0, filterString.length - 1)
         }
-        val filterList = filters.split(',')
+        val filterList = filterString.split(',').map { it.trim() }
         sqLiteHandler.createFilterTable()
         val savedFilters = sqLiteHandler.getFilters().toList<JSObject>()
         val matchedFilters = savedFilters.filter { filter ->
