@@ -14,14 +14,6 @@ class NotificationExtension : PushNotifications() {
         super.load()
         sqLiteHandler = SQLiteHandler(context)
     }
-    
-    @PluginMethod
-    fun echo(call: PluginCall) {
-        val value = call.getString("value")
-        val ret = JSObject()
-        ret.put("value", value)
-        call.success(ret)
-    }
 
     @PluginMethod
     fun getToken(call: PluginCall) {
@@ -45,5 +37,41 @@ class NotificationExtension : PushNotifications() {
             call.reject(result.getValue("reason") as String)
         }
     }
+    
+    @PluginMethod
+    fun removeTimeFilter(call: PluginCall) {
+        sqLiteHandler.openDB()
+        val result = sqLiteHandler.removeTimeFilter()
+        if (result.getValue("success") as Boolean) {
+            call.success()
+        } else {
+            call.reject("Got an unexpected error while remove the time filter.")
+        }
+    }
 
+    @PluginMethod
+    fun addFilters(call: PluginCall) {
+        sqLiteHandler.openDB()
+        val filters = call.getArray("filters").toList<String>()
+        for (filter in filters) {
+            val result = sqLiteHandler.insertFilter(filter)
+            if (!(result.getValue("success") as Boolean)) {
+                call.reject(result.getValue("reason") as String)
+            }
+        }
+        call.success()
+    }
+    
+    @PluginMethod
+    fun removeFilters(call: PluginCall) {
+        sqLiteHandler.openDB()
+        val filters = call.getArray("filters").toList<String>()
+        for (filter in filters) {
+            val result = sqLiteHandler.removeFilter(filter)
+            if (!(result.getValue("success") as Boolean)) {
+                call.reject(result.getValue("reason") as String)
+            }
+        }
+        call.success()
+    }
 }

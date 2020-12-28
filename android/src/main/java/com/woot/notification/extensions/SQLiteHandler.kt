@@ -78,7 +78,8 @@ class SQLiteHandler(private var context: Context) {
         if (::mdb.isInitialized) {
             val values: Array<String> = arrayOf(
                     "('filter_start_from', '$startFrom')",
-                    "('filter_end_at', '$endAt')"
+                    "('filter_end_at', '$endAt')",
+                    "('is_time_filter_on', 'true')"
             )
             val statement = StringBuilder("INSERT OR REPLACE INTO ")
                     .append(tableName)
@@ -88,6 +89,59 @@ class SQLiteHandler(private var context: Context) {
                     .toString()
             mdb.execSQL(arrayOf(statement))
             return mapOf("success" to true)
+        } else {
+            throw Exception("Local database not opened yet.")
+        }
+    }
+
+    @Throws(Exception::class)
+    fun removeTimeFilter(): Map<String, Any> {
+        if (::mdb.isInitialized) {
+            val statement = StringBuilder("INSERT OR REPLACE INTO ")
+                    .append(tableName)
+                    .append(" (key, value) VALUES ")
+                    .append("('is_time_filter_on', 'false');")
+                    .toString()
+            mdb.execSQL(arrayOf(statement))
+            return mapOf("success" to true)
+        } else {
+            throw Exception("Local database not opened yet.")
+        }
+    }
+
+    @Throws(Exception::class)
+    fun insertFilter(key: String): Map<String, Any> {
+        return if (::mdb.isInitialized) {
+            try {
+                val statement = StringBuilder("INSERT OR REPLACE INTO")
+                        .append(tableName)
+                        .append(" (key, value) VALUES ")
+                        .append("('$key', 'false');")
+                        .toString()
+                mdb.execSQL(arrayOf(statement))
+                mapOf("success" to true)
+            } catch (exception: Throwable) {
+                mapOf("success" to false, "reason" to "Unexpected error occurred while insert filter '$key'")
+            }
+        } else {
+            throw Exception("Local database not opened yet.")
+        }
+    }
+
+    @Throws(Exception::class)
+    fun removeFilter(key: String): Map<String, Any> {
+        return if (::mdb.isInitialized) {
+            try {
+                val statement = StringBuilder("INSERT OR REPLACE INTO")
+                        .append(tableName)
+                        .append(" (key, value) VALUES ")
+                        .append("('$key', 'true');")
+                        .toString()
+                mdb.execSQL(arrayOf(statement))
+                mapOf("success" to true)
+            } catch (exception: Throwable) {
+                mapOf("success" to false, "reason" to "Unexpected error occurred while insert filter '$key'")
+            }
         } else {
             throw Exception("Local database not opened yet.")
         }

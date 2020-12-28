@@ -23,11 +23,10 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         Log.d("remote message", remoteMessageData.toString())
         val opened = sqLiteHandler.openDB()
         if (opened) {
-            if (isValidTime() && isValidCondition()) {
-                Log.d("Filtering notification", "yay!!!")
+            if (isValidTime() && isValidCondition(remoteMessageData["filter"])) {
                 handleNotification(remoteMessageData["title"]!!, remoteMessageData["body"]!!)
             } else {
-                Log.d("Filtering notification", "hide!!!")
+                Log.d("NotificationExtension: ", "Push notification suppressed by filter")
             }
         }
     }
@@ -80,17 +79,31 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val startFrom: String? = (timeFilters.find { timeFilter ->
             timeFilter["key"] == "filter_start_from"
         } as JSObject).getString("value")
-        val endAt: String? = (timeFilters.find { timeFilter -> timeFilter["key"] == "filter_end_at"
+        val endAt: String? = (timeFilters.find { timeFilter ->
+            timeFilter["key"] == "filter_end_at"
         } as JSObject).getString("value")
-        if (startFrom != null && endAt != null) {
-            if (compareTimeString(currentTime, startFrom) && compareTimeString(endAt, currentTime)) {
-                return true
-            }
+        return if (startFrom != null && endAt != null) {
+            compareTimeString(currentTime, startFrom) && compareTimeString(endAt, currentTime)
+        } else {
+            true
         }
-        return false
     }
 
-    private fun isValidCondition(): Boolean {
+    private fun isValidCondition(filters: String?): Boolean {
+        if (filters == null) {
+            return true
+        }
+        val filterList = filters.split(',')
+        sqLiteHandler.createFilterTable()
+        val savedFilters = sqLiteHandler.getFilters().toList<JSObject>()
+        val matchedFilters = savedFilters.filter { filter ->
+            filter["key"] in filterList
+        }
+        for (matchedFilter in matchedFilters) {
+            if (matchedFilter["value"] == "false") {
+                return false
+            }
+        }
         return true
     }
 }
