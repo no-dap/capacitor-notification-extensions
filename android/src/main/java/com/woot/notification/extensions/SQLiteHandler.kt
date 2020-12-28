@@ -2,13 +2,16 @@ package com.woot.notification.extensions
 
 import android.content.Context
 import android.content.pm.PackageManager
+import com.getcapacitor.JSArray
 import com.woot.notification.extensions.sqliteHelper.SQLiteDatabaseHelper
 import java.lang.Exception
+
 
 class SQLiteHandler(private var context: Context) {
     private val encrypted = false
     private val mode = "no-encryption"
     private val dbVersion = 1
+    private val tableName = "notification_extensions_filter"
     private lateinit var mdb: SQLiteDatabaseHelper
 
     fun openDB(): Boolean {
@@ -29,12 +32,62 @@ class SQLiteHandler(private var context: Context) {
 
     @Throws(Exception::class)
     fun createFilterTable() {
-        if (mdb.isOpen) {
-            val statement = StringBuilder("CREATE TABLE IF NOT EXISTS notification_extensions_filter ")
-                    .append("(id INTEGER PRIMARY KEY NOT NULL, key TEXT NOT NULL UNIQUE, value TEXT);")
+        if (::mdb.isInitialized) {
+            val statement = StringBuilder("CREATE TABLE IF NOT EXISTS ")
+                    .append(tableName)
+                    .append(" (id INTEGER PRIMARY KEY NOT NULL, key TEXT NOT NULL UNIQUE, value TEXT);")
                     .toString()
             val createTableSQL: Array<String> = arrayOf(statement)
             mdb.execSQL(createTableSQL)
+        } else {
+            throw Exception("Local database not opened yet.")
+        }
+    }
+
+    @Throws(Exception::class)
+    fun getTimeFilter(): JSArray {
+        if (::mdb.isInitialized) {
+        val statement = StringBuilder("SELECT * FROM ")
+                .append(tableName)
+                .append(" WHERE key IN ('filter_start_from', 'filter_end_at');")
+                .toString()
+        return mdb.querySQL(statement, null)
+        } else {
+            throw Exception("Local database not opened yet.")
+        }
+    }
+
+    @Throws(Exception::class)
+    fun getFilters(): JSArray {
+        if (::mdb.isInitialized) {
+            val statement = StringBuilder("SELECT * FROM ")
+                    .append(tableName)
+                    .append(" WHERE key NOT IN ('filter_start_from', 'filter_end_at);")
+                    .toString()
+            return mdb.querySQL(statement, null)
+        } else {
+            throw Exception("Local database not opened yet.")
+        }
+    }
+
+    @Throws(Exception::class)
+    fun insertTimeFilter(startFrom: String, endAt: String): Map<String, Any> {
+        if (startFrom.split(':').size != 2 || endAt.split(':').size != 2) {
+            return mapOf("success" to false, "reason" to "Invalid time format")
+        }
+        if (::mdb.isInitialized) {
+            val values: Array<String> = arrayOf(
+                    "('filter_start_from', '$startFrom')",
+                    "('filter_end_at', '$endAt')"
+            )
+            val statement = StringBuilder("INSERT OR REPLACE INTO ")
+                    .append(tableName)
+                    .append(" (key, value) VALUES ")
+                    .append(values.joinToString(", "))
+                    .append(';')
+                    .toString()
+            mdb.execSQL(arrayOf(statement))
+            return mapOf("success" to true)
         } else {
             throw Exception("Local database not opened yet.")
         }

@@ -6,15 +6,15 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.plugin.PushNotifications
 import com.google.firebase.iid.FirebaseInstanceId
-import com.woot.notification.extensions.sqliteHelper.SQLiteDatabaseHelper
 
 @NativePlugin
-class NotificationExtension (
-        var localDatabaseHelper: SQLiteDatabaseHelper
-        ) : PushNotifications() {
+class NotificationExtension : PushNotifications() {
+    private lateinit var sqLiteHandler: SQLiteHandler
     override fun load() {
         super.load()
+        sqLiteHandler = SQLiteHandler(context)
     }
+    
     @PluginMethod
     fun echo(call: PluginCall) {
         val value = call.getString("value")
@@ -35,7 +35,15 @@ class NotificationExtension (
 
     @PluginMethod
     fun addTimeFilter(call: PluginCall) {
-
+        sqLiteHandler.openDB()
+        val startFrom = call.getString("startFrom")
+        val endAt = call.getString("endAt")
+        val result = sqLiteHandler.insertTimeFilter(startFrom, endAt)
+        if (result.getValue("success") as Boolean) {
+            call.success()
+        } else {
+            call.reject(result.getValue("reason") as String)
+        }
     }
 
 }
