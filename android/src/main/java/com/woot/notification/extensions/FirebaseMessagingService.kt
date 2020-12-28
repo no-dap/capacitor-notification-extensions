@@ -2,7 +2,10 @@ package com.woot.notification.extensions
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.PendingIntent.getActivity
 import android.content.Context
+import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
 import android.util.Log
@@ -24,32 +27,11 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val opened = sqLiteHandler.openDB()
         if (opened) {
             if (isValidTime() && isValidCondition(remoteMessageData["filter"])) {
-                handleNotification(remoteMessageData["title"]!!, remoteMessageData["body"]!!)
+                NotificationExtension().handleNotification(remoteMessage)
             } else {
                 Log.d("NotificationExtension: ", "Push notification suppressed by filter")
             }
         }
-    }
-
-    private fun handleNotification(messageTitle: String, messageBody: String) {
-        val channelId = "default"
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(messageTitle)
-                .setContentText(messageBody)
-                .setAutoCancel(true)
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                    channelId,
-                    "default",
-                    NotificationManager.IMPORTANCE_DEFAULT
-            )
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        notificationManager.notify(0, notificationBuilder.build())
     }
 
     override fun onNewToken(token: String) {
