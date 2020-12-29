@@ -1,5 +1,5 @@
 {
-  "name": "notification-extensions",
+  "name": "capacitor-notification-extensions",
   "version": "0.0.1",
   "description": "Extends capacitor PushNotifications plugin to handle on notification received",
   "main": "dist/plugin.js",
