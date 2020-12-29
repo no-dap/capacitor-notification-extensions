@@ -54,7 +54,12 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val endTimeFilter: JSObject? = timeFilters.find { timeFilter ->
             timeFilter["key"] == "filter_end_at"
         }
-        return if (startTimeFilter != null && endTimeFilter != null) {
+        val isTimeFilterOnObject: JSObject? = timeFilters.find { timeFilter ->
+            timeFilter["key"] == "is_time_filter_on"
+        }
+        isTimeFilterOnObject?: return true
+        val isTimeFilterOn = isTimeFilterOnObject.getString("value")
+        return if (isTimeFilterOn == "true" && startTimeFilter != null && endTimeFilter != null) {
             val startFrom: String = startTimeFilter.getString("value")
             val endAt: String = endTimeFilter.getString("value")
             compareTimeString(currentTime, startFrom) && compareTimeString(endAt, currentTime)
