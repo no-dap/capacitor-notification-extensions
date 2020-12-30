@@ -1,17 +1,7 @@
 package com.woot.notification.extensions
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.PendingIntent.getActivity
-import android.content.Context
-import android.content.Intent
-import android.media.RingtoneManager
-import android.os.Build
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import com.getcapacitor.JSObject
-import com.getcapacitor.plugin.util.AssetUtil
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import java.text.ParseException
@@ -23,13 +13,13 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         val remoteMessageData = remoteMessage.data
-        Log.d("remote message", remoteMessageData.toString())
+        Log.d(debugTag, remoteMessageData.toString())
         val opened = sqLiteHandler.openDB()
         if (opened) {
-            if (isValidTime() && isValidCondition(remoteMessageData["filter"])) {
+            if (checkMessageCondition(remoteMessageData)) {
                 NotificationExtension().handleNotification(remoteMessage)
             } else {
-                Log.d("NotificationExtension: ", "Push notification suppressed by filter")
+                Log.d(debugTag, "Push notification suppressed by filter")
             }
         }
     }
@@ -49,7 +39,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         return try {
             timeFormatter.parse(input) as Date >= timeFormatter.parse(comparison) as Date
         } catch (exception: ParseException) {
-            Log.e("NotificationExtension: ", "Time string input is not parsable.", exception)
+            Log.e(debugTag, "Time string input is not parsable.", exception)
             true
         }
     }
@@ -64,7 +54,12 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val endTimeFilter: JSObject? = timeFilters.find { timeFilter ->
             timeFilter["key"] == "filter_end_at"
         }
-        return if (startTimeFilter != null && endTimeFilter != null) {
+        val isTimeFilterOnObject: JSObject? = timeFilters.find { timeFilter ->
+            timeFilter["key"] == "is_time_filter_on"
+        }
+        isTimeFilterOnObject?: return true
+        val isTimeFilterOn = isTimeFilterOnObject.getString("value")
+        return if (isTimeFilterOn == "true" && startTimeFilter != null && endTimeFilter != null) {
             val startFrom: String = startTimeFilter.getString("value")
             val endAt: String = endTimeFilter.getString("value")
             compareTimeString(currentTime, startFrom) && compareTimeString(endAt, currentTime)
@@ -73,12 +68,9 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun isValidCondition(filters: String?): Boolean {
-        var filterString: String = filters ?: return true
-        if (filterString.endsWith(',')) {
-            filterString = filterString.substring(0, filterString.length - 1)
-        }
-        val filterList = filterString.split(',').map { it.trim() }
+    private fun isValidCondition(remoteMessageData: Map<String, String>): Boolean {
+        val filterString: String = remoteMessageData["filter"] ?: return true
+        val filterList = processFilterString(filterString)
         sqLiteHandler.createFilterTable()
         val savedFilters = sqLiteHandler.getFilters().toList<JSObject>()
         val matchedFilters = savedFilters.filter { filter ->
@@ -90,5 +82,25 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             }
         }
         return true
+    }
+
+    private fun checkMessageCondition(remoteMessageData: Map<String, String>): Boolean {
+        return isValidTime() && isValidCondition(remoteMessageData) && shouldMessageShown(remoteMessageData)
+    }
+
+    companion object {
+        const val debugTag = "NotificationExtension: "
+        private fun processFilterString(filterString: String): List<String> {
+            var mutableFilterString = filterString
+            if (mutableFilterString.endsWith(',')) {
+                mutableFilterString = mutableFilterString.substring(0, mutableFilterString.length - 1)
+            }
+            return mutableFilterString.split(',').map { it.trim() }
+        }
+
+        private fun shouldMessageShown(remoteMessageData: Map<String, String>): Boolean {
+            val messageShown = remoteMessageData["isShown"] ?: return true
+            return messageShown == "true"
+        }
     }
 }

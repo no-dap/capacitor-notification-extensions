@@ -1,7 +1,7 @@
 {
-  "name": "notification-extensions",
-  "version": "0.0.1",
-  "description": "Extends capacitor PushNotifications plugin to handle on notification received",
+  "name": "capacitor-notification-extensions",
+  "version": "0.0.2",
+  "description": "Extends capacitor PushNotifications plugin to handle received data notification",
   "main": "dist/plugin.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -42,7 +42,12 @@
   "keywords": [
     "capacitor",
     "plugin",
-    "native"
+    "native",
+    "notification",
+    "push notification",
+    "remote notification",
+    "data notification",
+    "notification filter"
   ],
   "capacitor": {
     "ios": {

@@ -49,7 +49,7 @@ class SQLiteHandler(private var context: Context) {
         if (::mdb.isInitialized) {
         val statement = StringBuilder("SELECT * FROM ")
                 .append(tableName)
-                .append(" WHERE key IN ('filter_start_from', 'filter_end_at');")
+                .append(" WHERE key IN ('filter_start_from', 'filter_end_at', 'is_time_filter_on');")
                 .toString()
         return mdb.querySQL(statement, null)
         } else {
@@ -62,7 +62,7 @@ class SQLiteHandler(private var context: Context) {
         if (::mdb.isInitialized) {
             val statement = StringBuilder("SELECT * FROM ")
                     .append(tableName)
-                    .append(" WHERE key NOT IN ('filter_start_from', 'filter_end_at');")
+                    .append(" WHERE key NOT IN ('filter_start_from', 'filter_end_at', 'is_time_filter_on');")
                     .toString()
             return mdb.querySQL(statement, null)
         } else {
