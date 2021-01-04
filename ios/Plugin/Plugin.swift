@@ -193,13 +193,14 @@ public class NotificationExtension: CAPPlugin {
         }
     }
     
+    // processing after database DML
     @objc func isSucceedResult(result: [String: Any], _ call: CAPPluginCall) -> Bool {
         let boolResult = result["success"] as! Bool
         if !boolResult {
             if let reason: String = result["reason"] as? String {
                 call.reject(reason)
             } else {
-                call.reject("Something when wrong")
+                call.reject("Database quering Error: Something went wrong")
             }
         }
         return boolResult
