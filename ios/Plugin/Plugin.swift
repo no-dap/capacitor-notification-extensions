@@ -1,24 +1,24 @@
 import Foundation
 import Capacitor
 import FirebaseMessaging
-
 /**
  * Please read the Capacitor iOS Plugin Development Guide
  * here: https://capacitorjs.com/docs/plugins/ios
  */
 @objc(NotificationExtension)
-public class NotificationExtension: CAPPlugin {
+public class NotificationExtension: CAPPushNotificationsPlugin {
     let sqlHandler = SQLiteHandler()
-
     public override func load() {
+        super.load()
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(onNotification(_:)),
-            name: Notification.Name("notification"),
+            name: Notification.Name("SilentNotification"),
             object: nil
         )
     }
     
+    // observer callback (SilentNotification)
     @objc func onNotification(_ notification: Notification) {
         sqlHandler.createFilterTable()
         handleNotification(notification: notification)
@@ -110,7 +110,13 @@ public class NotificationExtension: CAPPlugin {
     }
     
     @objc func notifyToListeners(identifier: String, data: [String: Any]) -> Void {
-        notifyListeners(identifier, data: data)
+        let isActive: Bool = !isApplicationActive()
+        if let isShown: String = data["is_shown"] as? String {
+            // notify to listeners if application is inactive or "is_shown" is false
+            if !isActive || isShown == "false" {
+                notifyListeners(identifier, data: data)
+            }
+        }
     }
     
     /**
@@ -151,13 +157,13 @@ public class NotificationExtension: CAPPlugin {
     }
 
     @objc func addFilters(_ call: CAPPluginCall) -> Void {
-        guard let filters = call.getArray("filters", String.self) else {
+        guard let filters: [String] = call.getArray("filters", String.self) else {
             call.reject("filters undefined")
             return;
         }
 
         for filter in filters {
-            let result = isSucceedResult(result: sqlHandler.insertFilter(key: filter), call)
+            let result: Bool = isSucceedResult(result: sqlHandler.insertFilter(key: filter), call)
             if !result {
                 return;
             }
@@ -166,13 +172,13 @@ public class NotificationExtension: CAPPlugin {
     }
 
     @objc func removeFilters(_ call: CAPPluginCall) -> Void {
-        guard let filters = call.getArray("filters", String.self) else {
+        guard let filters: [String] = call.getArray("filters", String.self) else {
             call.reject("filters undefined")
             return;
         }
         
         for filter in filters {
-            let result = isSucceedResult(result:  sqlHandler.removeFilter(key: filter), call)
+            let result: Bool = isSucceedResult(result:  sqlHandler.removeFilter(key: filter), call)
             if !result {
                 return;
             }
@@ -195,7 +201,7 @@ public class NotificationExtension: CAPPlugin {
     
     // processing after database DML
     @objc func isSucceedResult(result: [String: Any], _ call: CAPPluginCall) -> Bool {
-        let boolResult = result["success"] as! Bool
+        let boolResult: Bool = result["success"] as! Bool
         if !boolResult {
             if let reason: String = result["reason"] as? String {
                 call.reject(reason)
@@ -210,18 +216,19 @@ public class NotificationExtension: CAPPlugin {
      * return current time only hours and minutes ( ex. HH:mm )
      */
     @objc func getCurrentTimeString() -> String {
-        let date = Date()
-        let dateFormatter = DateFormatter()
+        let date: Date = Date()
+        let dateFormatter: DateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "ko_KR")
         dateFormatter.dateFormat = "HH:mm"
         return dateFormatter.string(from: date)
+//        return "10:00"
     }
 
     /**
      * return input time >= comparison time
      */
     @objc func compareTimeString(_ input: String, _ comparison: String) -> Bool {
-        let dateFormatter = DateFormatter()
+        let dateFormatter: DateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "ko_KR")
         dateFormatter.dateFormat = "HH:mm"
         return dateFormatter.date(from: input)! >= dateFormatter.date(from: comparison)!
@@ -272,7 +279,7 @@ public class NotificationExtension: CAPPlugin {
         let filterList: Array<String> = processFilterString(filterString: filterString)
         sqlHandler.createFilterTable()
         let savedFilters: Array<[String: Any]> = sqlHandler.getFilters()
-        let matchedFilters = savedFilters.filter { (filter: [String: Any]) -> Bool in
+        let matchedFilters: Array<[String: Any]> = savedFilters.filter { (filter: [String: Any]) -> Bool in
             if let key = filter["key"] as? String {
                 return filterList.contains(key)
             } else {
@@ -281,7 +288,7 @@ public class NotificationExtension: CAPPlugin {
             
         }
         for matchedFilter in matchedFilters {
-            if let value = matchedFilter["value"] as? String {
+            if let value: String = matchedFilter["value"] as? String {
                 return value == "true"
             }
         }

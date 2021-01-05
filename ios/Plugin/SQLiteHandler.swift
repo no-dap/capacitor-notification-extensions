@@ -16,9 +16,17 @@ class SQLiteHandler {
         openDB()
     }
     
+    // MARK: - Get String value from Info.plist
+    func getStringValue(forKey key: String) -> String {
+        guard let value = Bundle.main.infoDictionary?[key] as? String else {
+            fatalError("Could not find value for key \(key) in the Info.plist")
+        }
+        return value
+    }
     // MARK: - Open Database
     func openDB() {
-        let fileURL = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false).appendingPathComponent("TestDatabase.sqlite")
+        let dbName: String = getStringValue(forKey: "LocalDatabase") + "SQLite.db"
+        let fileURL = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false).appendingPathComponent(dbName)
             
         if sqlite3_open(fileURL.path, &db) != SQLITE_OK {
             print("open DB Failed")
@@ -84,8 +92,6 @@ class SQLiteHandler {
         var sql = "INSERT OR REPLACE INTO "
             sql += tableName
             sql += " (key, value) VALUES "
-//            sql += "('filter_start_from', '09:10'), "
-//            sql += "('filter_end_at', '23:20'), "
             sql += "('filter_start_from', '\(startFrom)'), "
             sql += "('filter_end_at', '\(endAt)'), "
             sql += "('is_time_filter_on', 'true');"
