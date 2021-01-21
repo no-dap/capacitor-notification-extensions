@@ -20,7 +20,6 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
     
     // observer callback (SilentNotification)
     @objc func onNotification(_ notification: Notification) {
-        sqlHandler.createFilterTable()
         handleNotification(notification: notification)
     }
     
@@ -316,5 +315,12 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         } else {
             return true
         }
+    }
+
+    @objc func getFilters(_ call: CAPPluginCall) -> Void {
+        guard let allFilters: Array<[String: Any]> = sqlHandler.getAllFilters() else {
+            call.reject("getFilters query error")
+        }
+        call.success(["filters": allFilters])
     }
 }

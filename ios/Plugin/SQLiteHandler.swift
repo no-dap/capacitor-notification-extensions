@@ -14,6 +14,7 @@ class SQLiteHandler {
     private let tableName = "notification_extensions_filter"
     init() {
         openDB()
+        createFilterTable()
     }
     
     // MARK: - Get String value from Info.plist
@@ -75,6 +76,18 @@ class SQLiteHandler {
         var sql = "SELECT * FROM "
             sql += tableName
             sql += " WHERE key NOT IN ('filter_start_from', 'filter_end_at', 'is_time_filter_on');"
+        
+        return runSelectQuery(sql: sql)
+    }
+
+    // MARK: - Get All Filters
+    func getAllFilters() -> Array<[String: Any]> {
+        if (!isDbOpened) {
+            print("Local database not opened yet.")
+            return []
+        }
+        var sql = "SELECT * FROM "
+            sql += tableName
         
         return runSelectQuery(sql: sql)
     }

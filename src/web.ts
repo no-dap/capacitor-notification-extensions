@@ -73,6 +73,10 @@ export class NotificationExtensionWeb extends WebPlugin implements NotificationE
     NotificationExtensionWeb.webNotImplemented();
     return { granted: false }
   }
+
+  async getFilters(): Promise<any> {
+    NotificationExtensionWeb.webNotImplemented();
+  }
 }
 
 const NotificationExtension = new NotificationExtensionWeb();
