@@ -45,6 +45,18 @@ class SQLiteHandler(private var context: Context) {
     }
 
     @Throws(Exception::class)
+    fun getAllFilters(): JSArray {
+        if (::mdb.isInitialized) {
+            val statement = StringBuilder("SELECT * FROM")
+                    .append(tableName)
+                    .toString()
+            return mdb.querySQL(statement, null)
+        } else {
+            throw Exception("Local database not opened yet.")
+        }
+    }
+
+    @Throws(Exception::class)
     fun getTimeFilter(): JSArray {
         if (::mdb.isInitialized) {
         val statement = StringBuilder("SELECT * FROM ")

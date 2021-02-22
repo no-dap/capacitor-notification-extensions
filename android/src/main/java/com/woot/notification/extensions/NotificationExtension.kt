@@ -35,6 +35,14 @@ class NotificationExtension : PushNotifications() {
     }
 
     @PluginMethod
+    fun getFilters(call: PluginCall) {
+        sqLiteHandler.openDB()
+        val result = JSObject()
+        result.put("value", sqLiteHandler.getAllFilters())
+        call.success(result)
+    }
+
+    @PluginMethod
     fun addTimeFilter(call: PluginCall) {
         sqLiteHandler.openDB()
         val startFrom = call.getString("startFrom")
