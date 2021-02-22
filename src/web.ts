@@ -23,6 +23,11 @@ export class NotificationExtensionWeb extends WebPlugin implements NotificationE
     return { value: '' };
   }
 
+  async getFilters(): Promise<Array<{[props: string]: string}>> {
+    NotificationExtensionWeb.webNotImplemented();
+    return [];
+  }
+
   async addTimeFilter(options: { startFrom: string, endAt: string }): Promise<void> {
     NotificationExtensionWeb.webNotImplemented();
   }
