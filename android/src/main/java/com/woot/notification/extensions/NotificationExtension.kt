@@ -23,6 +23,8 @@ class NotificationExtension : PushNotifications() {
     override fun load() {
         super.load()
         sqLiteHandler = SQLiteHandler(context)
+        sqLiteHandler.openDB()
+        sqLiteHandler.createFilterTable()
     }
 
     @PluginMethod
