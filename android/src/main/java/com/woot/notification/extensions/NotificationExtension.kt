@@ -15,6 +15,7 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.plugin.PushNotifications
 import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.RemoteMessage
 
 @NativePlugin
@@ -29,9 +30,9 @@ class NotificationExtension : PushNotifications() {
 
     @PluginMethod
     fun getToken(call: PluginCall) {
-        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { task ->
+        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
             val ret = JSObject()
-            ret.put("value", task.token)
+            ret.put("value", it.token)
             call.success(ret)
         }
     }

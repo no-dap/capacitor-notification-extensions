@@ -4,8 +4,7 @@ import android.util.Log
 import com.getcapacitor.JSObject
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import java.text.ParseException
-import java.text.SimpleDateFormat
+import com.woot.notification.extensions.exceptions.TimeParseException
 import java.util.*
 
 class FirebaseMessagingService : FirebaseMessagingService() {
@@ -29,24 +28,29 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         Log.d("token", token)
     }
 
-    private fun getCurrentTimeString(): String {
-        val date = Calendar.getInstance().time
-        return SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
+    private fun getCurrentTime(): Calendar {
+        return Calendar.getInstance()
     }
 
-    private fun compareTimeString(input: String, comparison: String): Boolean {
-        val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-        return try {
-            timeFormatter.parse(input) as Date >= timeFormatter.parse(comparison) as Date
-        } catch (exception: ParseException) {
-            Log.e(debugTag, "Time string input is not parsable.", exception)
-            true
+    @Throws(TimeParseException::class)
+    private fun parseTime(input: String, checkNextDate: Boolean = false): Calendar {
+        val ret = getTodayMidnight()
+        val inputArray = input.split(':')
+        if (inputArray.size != 2) {
+            Log.e(debugTag, "Malformed datetime saved as time filter.")
+            throw TimeParseException()
         }
+        ret.set(Calendar.HOUR_OF_DAY, inputArray[0].toInt())
+        ret.set(Calendar.MINUTE, inputArray[1].toInt())
+        if (checkNextDate && inputArray[0].toInt() < 13) {
+            ret.add(Calendar.DATE, 1)
+        }
+        return ret
     }
 
     private fun isValidTime(): Boolean {
         sqLiteHandler.createFilterTable()
-        val currentTime = getCurrentTimeString()
+        val currentTime = getCurrentTime()
         val timeFilters = sqLiteHandler.getTimeFilter().toList<JSObject>()
         val startTimeFilter: JSObject? = timeFilters.find { timeFilter ->
             timeFilter["key"] == "filter_start_from"
@@ -57,12 +61,16 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val isTimeFilterOnObject: JSObject? = timeFilters.find { timeFilter ->
             timeFilter["key"] == "is_time_filter_on"
         }
-        isTimeFilterOnObject?: return true
-        val isTimeFilterOn = isTimeFilterOnObject.getString("value")
-        return if (isTimeFilterOn == "true" && startTimeFilter != null && endTimeFilter != null) {
-            val startFrom: String = startTimeFilter.getString("value")
-            val endAt: String = endTimeFilter.getString("value")
-            compareTimeString(currentTime, startFrom) && compareTimeString(endAt, currentTime)
+        isTimeFilterOnObject ?: return true
+        val isTimeFilterOn = isTimeFilterOnObject.getString("value").toBoolean()
+        return if (isTimeFilterOn && startTimeFilter != null && endTimeFilter != null) {
+            try {
+                val startFrom: Calendar = parseTime(startTimeFilter.getString("value"))
+                val endAt: Calendar = parseTime(endTimeFilter.getString("value"))
+                compareDate(startFrom, currentTime, endAt)
+            } catch (error: TimeParseException) {
+                true
+            }
         } else {
             true
         }
@@ -72,12 +80,12 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val filterString: String = remoteMessageData["filter"] ?: return true
         val filterList = processFilterString(filterString)
         sqLiteHandler.createFilterTable()
-        val savedFilters = sqLiteHandler.getFilters().toList<JSObject>()
+        val savedFilters = sqLiteHandler.getFilters().toList<JSObject>() as List<JSObject>
         val matchedFilters = savedFilters.filter { filter ->
             filter["key"] in filterList
         }
         for (matchedFilter in matchedFilters) {
-            if (matchedFilter["value"] == "false") {
+            if ((matchedFilter.get("value") as String).toBoolean()) {
                 return false
             }
         }
@@ -100,7 +108,26 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
         private fun shouldMessageShown(remoteMessageData: Map<String, String>): Boolean {
             val messageShown = remoteMessageData["isShown"] ?: return true
-            return messageShown == "true"
+            return messageShown.toBoolean()
+        }
+
+        private fun getTodayMidnight(): Calendar {
+            val now = Calendar.getInstance()
+            now.set(Calendar.HOUR_OF_DAY, 0)
+            now.set(Calendar.MINUTE, 0)
+            now.set(Calendar.SECOND, 0)
+            now.set(Calendar.MILLISECOND, 0)
+            return now
+        }
+
+        private fun compareDate(startFrom: Calendar, currentTime: Calendar, endAt: Calendar): Boolean {
+            if (startFrom.after(endAt)) {
+                endAt.add(Calendar.DATE, 1)
+                if (currentTime.get(Calendar.AM_PM) == Calendar.AM) {
+                    currentTime.add(Calendar.DATE, 1)
+                }
+            }
+            return !(startFrom.before(currentTime) && endAt.after(currentTime))
         }
     }
 }
