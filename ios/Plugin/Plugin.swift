@@ -20,7 +20,6 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
     
     // observer callback (SilentNotification)
     @objc func onNotification(_ notification: Notification) {
-        sqlHandler.createFilterTable()
         handleNotification(notification: notification)
     }
     
@@ -139,7 +138,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
             call.error("Failed to get instance FirebaseID", error)
           } else if let token = token {
             call.success([
-                "token": token
+                "value": token
             ]);
           }
         }
@@ -316,5 +315,12 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         } else {
             return true
         }
+    }
+
+    @objc func getFilters(_ call: CAPPluginCall) -> Void {
+        guard let allFilters: Array<[String: Any]> = sqlHandler.getAllFilters() else {
+            call.reject("getFilters query error")
+        }
+        call.success(["value": allFilters])
     }
 }

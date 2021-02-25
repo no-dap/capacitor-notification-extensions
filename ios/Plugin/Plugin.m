@@ -14,4 +14,5 @@ CAP_PLUGIN(NotificationExtension, "NotificationExtension",
            CAP_PLUGIN_METHOD(getDeliveredNotifications, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(removeDeliveredNotifications, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(removeAllDeliveredNotifications, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(getFilters, CAPPluginReturnPromise);
 )

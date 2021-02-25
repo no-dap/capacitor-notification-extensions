@@ -1,8 +1,7 @@
 import {
   NotificationChannel,
   NotificationChannelList, NotificationPermissionResponse,
-  PushNotificationDeliveredList,
-  WebPlugin,
+  PushNotificationDeliveredList, registerWebPlugin, WebPlugin
 } from '@capacitor/core';
 import { NotificationExtensionPlugin } from './definitions';
 
@@ -84,6 +83,5 @@ const NotificationExtension = new NotificationExtensionWeb();
 
 export { NotificationExtension };
 
-import { registerWebPlugin } from '@capacitor/core';
 
 registerWebPlugin(NotificationExtension);
