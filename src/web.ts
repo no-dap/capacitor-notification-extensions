@@ -1,8 +1,7 @@
 import {
   NotificationChannel,
   NotificationChannelList, NotificationPermissionResponse,
-  PushNotificationDeliveredList,
-  WebPlugin,
+  PushNotificationDeliveredList, registerWebPlugin, WebPlugin
 } from '@capacitor/core';
 import { NotificationExtensionPlugin } from './definitions';
 
@@ -78,16 +77,11 @@ export class NotificationExtensionWeb extends WebPlugin implements NotificationE
     NotificationExtensionWeb.webNotImplemented();
     return { granted: false };
   }
-
-  async getFilters(): Promise<any> {
-    NotificationExtensionWeb.webNotImplemented();
-  }
 }
 
 const NotificationExtension = new NotificationExtensionWeb();
 
 export { NotificationExtension };
 
-import { registerWebPlugin } from '@capacitor/core';
 
 registerWebPlugin(NotificationExtension);

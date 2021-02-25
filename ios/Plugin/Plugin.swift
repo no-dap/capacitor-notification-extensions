@@ -138,7 +138,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
             call.error("Failed to get instance FirebaseID", error)
           } else if let token = token {
             call.success([
-                "token": token
+                "value": token
             ]);
           }
         }
@@ -321,6 +321,6 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         guard let allFilters: Array<[String: Any]> = sqlHandler.getAllFilters() else {
             call.reject("getFilters query error")
         }
-        call.success(["filters": allFilters])
+        call.success(["value": allFilters])
     }
 }
