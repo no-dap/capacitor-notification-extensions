@@ -62,5 +62,5 @@ export interface NotificationExtensionPlugin extends PushNotificationsPlugin {
   /**
    * Get all filters which contains time filter
    */
-  getFilters(): Promise<any>
+  getFilters(): Promise<{ value: Array<{ [props: string]: string }> }>
 }
