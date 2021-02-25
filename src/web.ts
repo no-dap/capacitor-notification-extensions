@@ -15,12 +15,17 @@ export class NotificationExtensionWeb extends WebPlugin implements NotificationE
   }
 
   private static webNotImplemented() {
-    console.error('Push Notification for web not implemented')
+    console.error('Push Notification for web not implemented');
   }
 
   async getToken(): Promise<{ value: string }> {
     NotificationExtensionWeb.webNotImplemented();
     return { value: '' };
+  }
+
+  async getFilters(): Promise<{ value: Array<{ [props: string]: string }> }> {
+    NotificationExtensionWeb.webNotImplemented();
+    return { value: [] };
   }
 
   async addTimeFilter(options: { startFrom: string, endAt: string }): Promise<void> {
@@ -49,12 +54,12 @@ export class NotificationExtensionWeb extends WebPlugin implements NotificationE
 
   async getDeliveredNotifications(): Promise<PushNotificationDeliveredList> {
     NotificationExtensionWeb.webNotImplemented();
-    return { notifications: [] }
+    return { notifications: [] };
   }
 
   async listChannels(): Promise<NotificationChannelList> {
     NotificationExtensionWeb.webNotImplemented();
-    return { channels: [] }
+    return { channels: [] };
   }
 
   async register(): Promise<void> {
@@ -71,7 +76,7 @@ export class NotificationExtensionWeb extends WebPlugin implements NotificationE
 
   async requestPermission(): Promise<NotificationPermissionResponse> {
     NotificationExtensionWeb.webNotImplemented();
-    return { granted: false }
+    return { granted: false };
   }
 
   async getFilters(): Promise<any> {
@@ -84,4 +89,5 @@ const NotificationExtension = new NotificationExtensionWeb();
 export { NotificationExtension };
 
 import { registerWebPlugin } from '@capacitor/core';
+
 registerWebPlugin(NotificationExtension);

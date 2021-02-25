@@ -45,6 +45,18 @@ class SQLiteHandler(private var context: Context) {
     }
 
     @Throws(Exception::class)
+    fun getAllFilters(): JSArray {
+        if (::mdb.isInitialized) {
+            val statement = StringBuilder("SELECT * FROM ")
+                    .append(tableName)
+                    .toString()
+            return mdb.querySQL(statement, null)
+        } else {
+            throw Exception("Local database not opened yet.")
+        }
+    }
+
+    @Throws(Exception::class)
     fun getTimeFilter(): JSArray {
         if (::mdb.isInitialized) {
         val statement = StringBuilder("SELECT * FROM ")
@@ -132,7 +144,7 @@ class SQLiteHandler(private var context: Context) {
     fun removeFilter(key: String): Map<String, Any> {
         return if (::mdb.isInitialized) {
             try {
-                val statement = StringBuilder("INSERT OR REPLACE INTO")
+                val statement = StringBuilder("INSERT OR REPLACE INTO ")
                         .append(tableName)
                         .append(" (key, value) VALUES ")
                         .append("('$key', 'true');")
