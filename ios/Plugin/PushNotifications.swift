@@ -186,7 +186,6 @@ public class CAPPushNotificationsPlugin : CAPPlugin, UNUserNotificationCenterDel
     public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                        didReceive response: UNNotificationResponse,
                                        withCompletionHandler completionHandler: @escaping () -> Void) {
-        print("===== USER NOTIFICATION CENTER =====")
         completionHandler()
 
         var data = JSObject()

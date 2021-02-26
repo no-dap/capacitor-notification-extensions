@@ -8,6 +8,9 @@ import FirebaseMessaging
 @objc(NotificationExtension)
 public class NotificationExtension: CAPPushNotificationsPlugin {
     let sqlHandler = SQLiteHandler()
+    let defaultYear = 2021
+    let defaultMonth = 1
+    let defaultDay = 1
     public override func load() {
         super.load()
         NotificationCenter.default.addObserver(
@@ -212,30 +215,62 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
     }
     
     /**
-     * return current time only hours and minutes ( ex. HH:mm )
+     * extract default date from HH:mm string
      */
-    @objc func getCurrentTimeString() -> String {
-        let date: Date = Date()
-        let dateFormatter: DateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "ko_KR")
-        dateFormatter.dateFormat = "HH:mm"
-        return dateFormatter.string(from: date)
-//        return "10:00"
+    @objc func extractDefaultDate(data: String) -> Date? {
+        let splittedData = data.components(separatedBy: ":")
+        if splittedData.count != 2 {
+            return nil
+        }
+        let dateComponent = DateComponents(
+            timeZone: TimeZone(identifier: "ko_KR"),
+            year: defaultYear,
+            month: defaultMonth,
+            day: defaultDay,
+            hour: Int(splittedData[0]),
+            minute: Int(splittedData[1])
+        )
+        let calendar = Calendar.current
+        let date = calendar.date(from: dateComponent)!
+        return date
     }
-
+    
     /**
-     * return input time >= comparison time
+     * get current date with default year, month, day
      */
-    @objc func compareTimeString(_ input: String, _ comparison: String) -> Bool {
-        let dateFormatter: DateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "ko_KR")
-        dateFormatter.dateFormat = "HH:mm"
-        return dateFormatter.date(from: input)! >= dateFormatter.date(from: comparison)!
+    @objc func getCurrentDateWithDefaultDate() -> Date? {
+        let calendar = Calendar.current
+        var dateComponents: DateComponents? = calendar.dateComponents([.hour, .minute], from: Date())
+        dateComponents?.year = defaultYear
+        dateComponents?.month = defaultMonth
+        dateComponents?.day = defaultDay
+        
+        let date: Date? = calendar.date(from: dateComponents!)
+        return date
+    }
+    
+    /**
+     * if currentDate is between startFrom and endAt, return false
+     */
+    @objc func compareDate(_ startFrom: String, _ endAt: String) -> Bool {
+        let calendar = Calendar.current
+        guard let startFromDate = extractDefaultDate(data: startFrom),
+              var currentDate = getCurrentDateWithDefaultDate(),
+              var endAtDate = extractDefaultDate(data: endAt) else {
+            return false;
+        }
+        if startFrom > endAt {
+            endAtDate = calendar.date(byAdding: .day, value: 1, to: endAtDate)!
+            // if it is AM, add 1 day to currentDate
+            if (calendar.component(.hour, from: currentDate) < 12) {
+                currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+            }
+        }
+        return !((startFromDate < currentDate) && (currentDate < endAtDate))
     }
 
     @objc func isValidTime() -> Bool {
         sqlHandler.createFilterTable()
-        let currentTime = getCurrentTimeString()
         let timeFilters = sqlHandler.getTimeFilter()
 
         func getFilteredData(filterString: String) -> Array<[String: Any]> {
@@ -263,7 +298,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
                   let endAt: String = endTimeFilter[0]["value"] as? String else {
                 return false
             }
-            return compareTimeString(currentTime, startFrom) && compareTimeString(endAt, currentTime)
+            return compareDate(startFrom, endAt)
         } else {
             return true
         }
