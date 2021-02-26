@@ -3,9 +3,9 @@ import {
   NotificationChannelList, NotificationPermissionResponse,
   PushNotificationDeliveredList, registerWebPlugin, WebPlugin
 } from '@capacitor/core';
-import { NotificationExtensionPlugin } from './definitions';
+import { NotificationExtension } from './definitions';
 
-export class NotificationExtensionWeb extends WebPlugin implements NotificationExtensionPlugin {
+export class NotificationExtensionWeb extends WebPlugin implements NotificationExtension {
   constructor() {
     super({
       name: 'NotificationExtension',
@@ -80,8 +80,5 @@ export class NotificationExtensionWeb extends WebPlugin implements NotificationE
 }
 
 const NotificationExtension = new NotificationExtensionWeb();
-
-export { NotificationExtension };
-
 
 registerWebPlugin(NotificationExtension);

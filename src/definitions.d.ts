@@ -8,11 +8,11 @@ import { PluginListenerHandle } from '@capacitor/core/dist/esm/definitions';
 
 declare module '@capacitor/core' {
   interface PluginRegistry {
-    NotificationExtension: NotificationExtensionPlugin;
+    NotificationExtension: NotificationExtension;
   }
 }
 
-export interface NotificationExtensionPlugin extends PushNotificationsPlugin {
+export interface NotificationExtension extends PushNotificationsPlugin {
   /**
    * @deprecated Use getToken() instead.
    */
