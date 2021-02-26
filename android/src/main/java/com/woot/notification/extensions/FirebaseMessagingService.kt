@@ -15,7 +15,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         Log.d(debugTag, remoteMessageData.toString())
         val opened = sqLiteHandler.openDB()
         if (opened) {
-            if (checkMessageCondition(remoteMessageData)) {
+            if (checkMessageCondition(remoteMessageData) && sqLiteHandler.isLoggedIn()) {
                 NotificationExtension().handleNotification(remoteMessage)
             } else {
                 Log.d(debugTag, "Push notification suppressed by filter")
@@ -38,7 +38,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val inputArray = input.split(':')
         if (inputArray.size != 2) {
             Log.e(debugTag, "Malformed datetime saved as time filter.")
-            throw TimeParseException()
+            throw TimeParseException(TimeParseException.MalformedInputException)
         }
         ret.set(Calendar.HOUR_OF_DAY, inputArray[0].toInt())
         ret.set(Calendar.MINUTE, inputArray[1].toInt())

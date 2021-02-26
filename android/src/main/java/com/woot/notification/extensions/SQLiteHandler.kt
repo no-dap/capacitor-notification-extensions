@@ -3,8 +3,9 @@ package com.woot.notification.extensions
 import android.content.Context
 import android.content.pm.PackageManager
 import com.getcapacitor.JSArray
+import com.getcapacitor.JSObject
+import com.woot.notification.extensions.exceptions.DatabaseNotImplemented
 import com.woot.notification.extensions.sqliteHelper.SQLiteDatabaseHelper
-import java.lang.Exception
 
 
 class SQLiteHandler(private var context: Context) {
@@ -30,7 +31,7 @@ class SQLiteHandler(private var context: Context) {
                 }
     }
 
-    @Throws(Exception::class)
+    @Throws(DatabaseNotImplemented::class)
     fun createFilterTable() {
         if (::mdb.isInitialized) {
             val statement = StringBuilder("CREATE TABLE IF NOT EXISTS ")
@@ -40,11 +41,11 @@ class SQLiteHandler(private var context: Context) {
             val createTableSQL: Array<String> = arrayOf(statement)
             mdb.execSQL(createTableSQL)
         } else {
-            throw Exception("Local database not opened yet.")
+            throw DatabaseNotImplemented()
         }
     }
 
-    @Throws(Exception::class)
+    @Throws(DatabaseNotImplemented::class)
     fun getAllFilters(): JSArray {
         if (::mdb.isInitialized) {
             val statement = StringBuilder("SELECT * FROM ")
@@ -52,11 +53,11 @@ class SQLiteHandler(private var context: Context) {
                     .toString()
             return mdb.querySQL(statement, null)
         } else {
-            throw Exception("Local database not opened yet.")
+            throw DatabaseNotImplemented()
         }
     }
 
-    @Throws(Exception::class)
+    @Throws(DatabaseNotImplemented::class)
     fun getTimeFilter(): JSArray {
         if (::mdb.isInitialized) {
         val statement = StringBuilder("SELECT * FROM ")
@@ -65,11 +66,11 @@ class SQLiteHandler(private var context: Context) {
                 .toString()
         return mdb.querySQL(statement, null)
         } else {
-            throw Exception("Local database not opened yet.")
+            throw DatabaseNotImplemented()
         }
     }
 
-    @Throws(Exception::class)
+    @Throws(DatabaseNotImplemented::class)
     fun getFilters(): JSArray {
         if (::mdb.isInitialized) {
             val statement = StringBuilder("SELECT * FROM ")
@@ -78,11 +79,29 @@ class SQLiteHandler(private var context: Context) {
                     .toString()
             return mdb.querySQL(statement, null)
         } else {
-            throw Exception("Local database not opened yet.")
+            throw DatabaseNotImplemented()
         }
     }
 
-    @Throws(Exception::class)
+    @Throws(DatabaseNotImplemented::class)
+    fun isLoggedIn(): Boolean {
+        if (::mdb.isInitialized) {
+            val statement = StringBuilder("SELECT * FROM ")
+                    .append(tableName)
+                    .append(" WHERE key = 'is_logged_in';")
+                    .toString()
+            return try {
+                val result = mdb.querySQL(statement, null).toList<JSObject>()[0]
+                !(result.get("value") as String).toBoolean()
+            } catch (error: IndexOutOfBoundsException) {
+                true
+            }
+        } else {
+            throw DatabaseNotImplemented()
+        }
+    }
+
+    @Throws(DatabaseNotImplemented::class)
     fun insertTimeFilter(startFrom: String, endAt: String): Map<String, Any> {
         if (startFrom.split(':').size != 2 || endAt.split(':').size != 2) {
             return mapOf("success" to false, "reason" to "Invalid time format")
@@ -102,11 +121,11 @@ class SQLiteHandler(private var context: Context) {
             mdb.execSQL(arrayOf(statement))
             return mapOf("success" to true)
         } else {
-            throw Exception("Local database not opened yet.")
+            throw DatabaseNotImplemented()
         }
     }
 
-    @Throws(Exception::class)
+    @Throws(DatabaseNotImplemented::class)
     fun removeTimeFilter(): Map<String, Any> {
         if (::mdb.isInitialized) {
             val statement = StringBuilder("INSERT OR REPLACE INTO ")
@@ -117,11 +136,11 @@ class SQLiteHandler(private var context: Context) {
             mdb.execSQL(arrayOf(statement))
             return mapOf("success" to true)
         } else {
-            throw Exception("Local database not opened yet.")
+            throw DatabaseNotImplemented()
         }
     }
 
-    @Throws(Exception::class)
+    @Throws(DatabaseNotImplemented::class)
     fun insertFilter(key: String): Map<String, Any> {
         return if (::mdb.isInitialized) {
             try {
@@ -136,11 +155,11 @@ class SQLiteHandler(private var context: Context) {
                 mapOf("success" to false, "reason" to "Unexpected error occurred while insert filter '$key'")
             }
         } else {
-            throw Exception("Local database not opened yet.")
+            throw DatabaseNotImplemented()
         }
     }
 
-    @Throws(Exception::class)
+    @Throws(DatabaseNotImplemented::class)
     fun removeFilter(key: String): Map<String, Any> {
         return if (::mdb.isInitialized) {
             try {
@@ -155,7 +174,7 @@ class SQLiteHandler(private var context: Context) {
                 mapOf("success" to false, "reason" to "Unexpected error occurred while insert filter '$key'")
             }
         } else {
-            throw Exception("Local database not opened yet.")
+            throw DatabaseNotImplemented()
         }
     }
 }
