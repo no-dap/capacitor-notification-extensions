@@ -15,7 +15,6 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.plugin.PushNotifications
 import com.google.firebase.iid.FirebaseInstanceId
-import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.RemoteMessage
 
 @NativePlugin

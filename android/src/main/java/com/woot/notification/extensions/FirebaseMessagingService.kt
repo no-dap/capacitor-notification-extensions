@@ -123,7 +123,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         private fun compareDate(startFrom: Calendar, currentTime: Calendar, endAt: Calendar): Boolean {
             if (startFrom.after(endAt)) {
                 endAt.add(Calendar.DATE, 1)
-                if (currentTime.get(Calendar.AM_PM) == Calendar.AM) {
+                if (startFrom.after(currentTime)) {
                     currentTime.add(Calendar.DATE, 1)
                 }
             }
