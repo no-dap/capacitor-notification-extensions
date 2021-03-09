@@ -28,75 +28,75 @@ public class CAPPushNotificationsPlugin : CAPPlugin, UNUserNotificationCenterDel
     * Register for push notifications
     */
     @objc func register(_ call: CAPPluginCall) {
-    DispatchQueue.main.async {
-      UIApplication.shared.registerForRemoteNotifications()
-    }
-    call.success()
+        DispatchQueue.main.async {
+          UIApplication.shared.registerForRemoteNotifications()
+        }
+        call.success()
     }
 
     /**
     * Request notification permission
     */
     @objc func requestPermission(_ call: CAPPluginCall) {
-    self.bridge.notificationsDelegate.requestPermissions() { granted, error in
-        guard error == nil else {
-            call.error(error!.localizedDescription)
-            return
+        self.bridge.notificationsDelegate.requestPermissions() { granted, error in
+            guard error == nil else {
+                call.error(error!.localizedDescription)
+                return
+            }
+            call.success(["granted": granted])
         }
-        call.success(["granted": granted])
-    }
     }
 
     /**
     * Get notifications in Notification Center
     */
     @objc func getDeliveredNotifications(_ call: CAPPluginCall) {
-    UNUserNotificationCenter.current().getDeliveredNotifications(completionHandler: { (notifications) in
-      let ret = notifications.map({ (notification) -> [String:Any] in
-        return self.makePushNotificationRequestJSObject(notification.request)
-      })
-      call.success([
-        "notifications": ret
-      ])
-    })
+        UNUserNotificationCenter.current().getDeliveredNotifications(completionHandler: { (notifications) in
+          let ret = notifications.map({ (notification) -> [String:Any] in
+            return self.makePushNotificationRequestJSObject(notification.request)
+          })
+          call.success([
+            "notifications": ret
+          ])
+        })
     }
 
     /**
     * Remove specified notifications from Notification Center
     */
     @objc func removeDeliveredNotifications(_ call: CAPPluginCall) {
-    guard let notifications = call.getArray("notifications", JSObject.self, []) else {
-      call.error("Must supply notifications to remove")
-      return
-    }
+        guard let notifications = call.getArray("notifications", JSObject.self, []) else {
+          call.error("Must supply notifications to remove")
+          return
+        }
 
-    let ids = notifications.map { $0["id"] as? String ?? "" }
+        let ids = notifications.map { $0["id"] as? String ?? "" }
 
-    UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ids)
-    call.success()
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ids)
+        call.success()
     }
 
     /**
     * Remove all notifications from Notification Center
     */
     @objc func removeAllDeliveredNotifications(_ call: CAPPluginCall) {
-    UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-    DispatchQueue.main.async(execute: {
-      UIApplication.shared.applicationIconBadgeNumber = 0
-    })
-    call.success()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        DispatchQueue.main.async(execute: {
+          UIApplication.shared.applicationIconBadgeNumber = 0
+        })
+        call.success()
     }
 
     @objc func createChannel(_ call: CAPPluginCall) {
-    call.unimplemented()
+        call.unimplemented()
     }
 
     @objc func deleteChannel(_ call: CAPPluginCall) {
-    call.unimplemented()
+        call.unimplemented()
     }
 
     @objc func listChannels(_ call: CAPPluginCall) {
-    call.unimplemented()
+        call.unimplemented()
     }
 
     @objc public func didRegisterForRemoteNotificationsWithDeviceToken(notification: NSNotification){
@@ -187,12 +187,10 @@ public class CAPPushNotificationsPlugin : CAPPlugin, UNUserNotificationCenterDel
                                        didReceive response: UNNotificationResponse,
                                        withCompletionHandler completionHandler: @escaping () -> Void) {
         completionHandler()
-
         var data = JSObject()
 
         // Get the info for the original notification request
         let originalNotificationRequest = response.notification.request
-
         let actionId = response.actionIdentifier
 
         // We turn the two default actions (open/dismiss) into generic strings
@@ -214,7 +212,7 @@ public class CAPPushNotificationsPlugin : CAPPlugin, UNUserNotificationCenterDel
          * 로컬에서 푸시 띄워주는거를 전부 localNotification으로 받아들이기에 강제로 pushaction으로 listener에게 알림.
          */
         let action = "pushNotificationActionPerformed"
-        data["notification"] = makeNotificationRequestJSObject(originalNotificationRequest)
+        data["notification"] = makePushNotificationRequestJSObject(originalNotificationRequest)
         notifyListeners(action, data: data)
     }
 

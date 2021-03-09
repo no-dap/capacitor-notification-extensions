@@ -1,16 +1,40 @@
 import Foundation
 import Capacitor
 import FirebaseMessaging
+
+extension Date {
+    var year: Int {
+        return Calendar.current.component(.year, from: self)
+    }
+    var month: Int {
+        return Calendar.current.component(.month, from: self)
+    }
+    var day: Int {
+        return Calendar.current.component(.day, from: self)
+    }
+    var hour: Int {
+        return Calendar.current.component(.hour, from: self)
+    }
+    var minute: Int {
+        return Calendar.current.component(.minute, from: self)
+    }
+    // change date to local timezone string
+    func toLocaleString(from date: Date? = nil) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        dateFormatter.locale = Locale.current
+        return dateFormatter.string(from: date ?? Date())
+    }
+}
 /**
  * Please read the Capacitor iOS Plugin Development Guide
  * here: https://capacitorjs.com/docs/plugins/ios
  */
 @objc(NotificationExtension)
 public class NotificationExtension: CAPPushNotificationsPlugin {
+    
     let sqlHandler = SQLiteHandler()
-    let defaultYear = 2021
-    let defaultMonth = 1
-    let defaultDay = 1
+
     public override func load() {
         super.load()
         NotificationCenter.default.addObserver(
@@ -31,10 +55,9 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         guard let notificationData: [String: Any] = notification.userInfo?["aps"] as? [String: Any] else {
             return
         }
-
+        
         // notify notification data to listner
         notifyToListeners(identifier: "pushNotificationReceived", data: notificationData)
-        
         if checkMessageCondition(remoteMessageData: notificationData) {
             UNUserNotificationCenter.current().getDeliveredNotifications { deliveredNotifications in
                 // if there is no identifier, finish this process
@@ -51,7 +74,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
     }
     
     @objc func getIdentifier(_ data: [String: Any]) -> String? {
-        if let identifier: String = data["filter"] as? String {
+        if let identifier: String = data["code"] as? String {
             return identifier
         } else {
             return nil
@@ -76,6 +99,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         content.body = body
         content.badge = badge as NSNumber
         content.sound = UNNotificationSound.default
+        content.userInfo = data
         return content
     }
     
@@ -104,19 +128,23 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
     
     // show push notification to user
     @objc func showPushNotification(request: UNNotificationRequest) -> Void {
-        // send push only inactive state
-        let isActive = self.isApplicationActive()
-        if !isActive {
-            UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+        DispatchQueue.main.async {
+            // send push only inactive state
+            let isActive = self.isApplicationActive()
+            if !isActive {
+                UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+            }
         }
     }
     
     @objc func notifyToListeners(identifier: String, data: [String: Any]) -> Void {
-        let isActive: Bool = !isApplicationActive()
-        if let isShown: String = data["is_shown"] as? String {
-            // notify to listeners if application is inactive or "is_shown" is false
-            if !isActive || isShown == "false" {
-                notifyListeners(identifier, data: data)
+        DispatchQueue.main.async {
+            let isActive: Bool = self.isApplicationActive()
+            if let isShown: String = data["isShown"] as? String {
+                // notify to listeners if application is active or "isShown" is false
+                if isActive || isShown == "false" {
+                    self.notifyListeners(identifier, data: data)
+                }
             }
         }
     }
@@ -125,13 +153,11 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
      * get is application active ( return true when application is in foreground )
      */
     @objc func isApplicationActive() -> Bool {
-        DispatchQueue.main.sync {
-            switch UIApplication.shared.applicationState {
+        switch UIApplication.shared.applicationState {
             case .active:
                 return true
             default:
                 return false
-            }
         }
     }
     
@@ -222,47 +248,31 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         if splittedData.count != 2 {
             return nil
         }
+        let calendar = Calendar.current
         let dateComponent = DateComponents(
-            timeZone: TimeZone(identifier: "ko_KR"),
-            year: defaultYear,
-            month: defaultMonth,
-            day: defaultDay,
+            year: 2021,
             hour: Int(splittedData[0]),
             minute: Int(splittedData[1])
         )
-        let calendar = Calendar.current
-        let date = calendar.date(from: dateComponent)!
-        return date
+        return calendar.date(from: dateComponent)!
     }
-    
-    /**
-     * get current date with default year, month, day
-     */
-    @objc func getCurrentDateWithDefaultDate() -> Date? {
-        let calendar = Calendar.current
-        var dateComponents: DateComponents? = calendar.dateComponents([.hour, .minute], from: Date())
-        dateComponents?.year = defaultYear
-        dateComponents?.month = defaultMonth
-        dateComponents?.day = defaultDay
-        
-        let date: Date? = calendar.date(from: dateComponents!)
-        return date
-    }
-    
+
     /**
      * if currentDate is between startFrom and endAt, return false
      */
     @objc func compareDate(_ startFrom: String, _ endAt: String) -> Bool {
+        let date = Date()
         let calendar = Calendar.current
-        guard let startFromDate = extractDefaultDate(data: startFrom),
-              var currentDate = getCurrentDateWithDefaultDate(),
-              var endAtDate = extractDefaultDate(data: endAt) else {
+        guard let startFromDate: Date = extractDefaultDate(data: startFrom),
+              var currentDate: Date = extractDefaultDate(data: "\(date.hour):\(date.minute)"),
+              var endAtDate: Date = extractDefaultDate(data: endAt) else {
             return false;
         }
-        if startFrom > endAt {
+
+        if startFromDate > endAtDate {
             endAtDate = calendar.date(byAdding: .day, value: 1, to: endAtDate)!
-            // if it is AM, add 1 day to currentDate
-            if (calendar.component(.hour, from: currentDate) < 12) {
+            // if current is lower than start, add 1 day to currentDate
+            if (startFromDate > currentDate) {
                 currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
             }
         }
@@ -309,7 +319,6 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
             // return true if there is no filter
             return true
         }
-        
         let filterList: Array<String> = processFilterString(filterString: filterString)
         sqlHandler.createFilterTable()
         let savedFilters: Array<[String: Any]> = sqlHandler.getFilters()
@@ -321,6 +330,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
             }
             
         }
+        
         for matchedFilter in matchedFilters {
             if let value: String = matchedFilter["value"] as? String {
                 return value == "true"
@@ -345,7 +355,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
     }
     
     @objc func shouldMessageShown(_ remoteMessageData: [String: Any]) -> Bool {
-        if let messageShown: String = remoteMessageData["is_shown"] as? String {
+        if let messageShown: String = remoteMessageData["isShown"] as? String {
             return messageShown == "true"
         } else {
             return true
@@ -353,9 +363,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
     }
 
     @objc func getFilters(_ call: CAPPluginCall) -> Void {
-        guard let allFilters: Array<[String: Any]> = sqlHandler.getAllFilters() else {
-            call.reject("getFilters query error")
-        }
+        let allFilters: Array<[String: Any]> = sqlHandler.getAllFilters()
         call.success(["value": allFilters])
     }
 }
