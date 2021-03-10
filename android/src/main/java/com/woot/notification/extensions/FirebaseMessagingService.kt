@@ -85,7 +85,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             filter["key"] in filterList
         }
         for (matchedFilter in matchedFilters) {
-            if ((matchedFilter.get("value") as String).toBoolean()) {
+            if (!(matchedFilter.get("value") as String).toBoolean()) {
                 return false
             }
         }
