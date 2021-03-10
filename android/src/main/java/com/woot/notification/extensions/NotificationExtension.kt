@@ -113,6 +113,8 @@ class NotificationExtension : PushNotifications() {
                 .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                 .setContentIntent(pendingIntent)
                 .setGroup(groupId.toString())
+                .setStyle(NotificationCompat.BigTextStyle()
+                        .bigText(remoteMessage.data["body"]))
         val notificationManager = staticBridge.activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
