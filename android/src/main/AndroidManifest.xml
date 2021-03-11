@@ -10,7 +10,7 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        <receiver android:name="com.woot.notification.extensions.TimedNotificationPublisher" />
+        <receiver android:name="com.woot.notification.extensions.local.TimedNotificationPublisher" />
         <receiver android:name="com.getcapacitor.plugin.notification.NotificationDismissReceiver" />
         <receiver android:name="com.getcapacitor.plugin.notification.LocalNotificationRestoreReceiver" android:directBootAware="true" android:exported="false">
             <intent-filter>
@@ -22,4 +22,3 @@
     </application>
 
 </manifest>
-  

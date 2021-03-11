@@ -1,8 +1,9 @@
 import { PushNotificationsPlugin } from '@capacitor/core';
 import {
+  LocalNotificationsPlugin,
   PushNotification,
   PushNotificationActionPerformed,
-  PushNotificationToken,
+  PushNotificationToken
 } from '@capacitor/core/dist/esm/core-plugin-definitions';
 import { PluginListenerHandle } from '@capacitor/core/dist/esm/definitions';
 
@@ -11,6 +12,8 @@ declare module '@capacitor/core' {
     NotificationExtension: NotificationExtension;
   }
 }
+
+export interface LocalNotificationExtension extends LocalNotificationsPlugin {}
 
 export interface NotificationExtension extends PushNotificationsPlugin {
   /**

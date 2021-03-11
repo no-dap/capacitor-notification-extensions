@@ -1,4 +1,4 @@
-package com.woot.notification.extensions
+package com.woot.notification.extensions.local
 
 import android.content.Context
 import android.content.Intent
@@ -12,6 +12,11 @@ class TimedNotificationPublisher: TimedNotificationPublisher() {
         val id = intent!!.getIntExtra(LocalNotificationManager.NOTIFICATION_INTENT_KEY, Int.MIN_VALUE)
         val storage = NotificationStorage(context)
         val notificationJson = storage.getSavedNotificationAsJSObject(id.toString())
-        LocalNotificationExtension().fireReceived(notificationJson)
+        LocalNotificationExtension.fireReceived(notificationJson)
+    }
+
+    companion object {
+        const val NOTIFICATION_KEY = "NotificationPublisher.notification";
+        const val CRON_KEY = "NotificationPublisher.cron";
     }
 }
