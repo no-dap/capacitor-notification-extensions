@@ -6,9 +6,9 @@ Capacitor plugin with some features
     - Time based filters  
 - Force-fire `localNotificationReceived` event listener which is not working properly in LocalNotification plugin  
 
-# Depedency
+# Dependency
 Works fine with Capacitor 2.x  
-Not competible with Capacitor 3.x  
+Not compatible with Capacitor 3.x  
 Use SQLite via Helper(from [capacitor sqlite plugin](https://github.com/capacitor-community/sqlite))  
 
 # Installation
@@ -37,7 +37,7 @@ public class MainActivity extends BridgeActivity {
 ```xml
 <?xml version='1.0' encoding='utf-8'?>
 <manifest>
-  <application ...>
+  <application...>
     ...
     <meta-data android:name="com.woot.notification.extensions.local_database_name" android:value="@string/db_name" />
   </application>
@@ -65,7 +65,7 @@ class AppDelegate: UIResponder, UIAppicationDelegate {
 2. Add some data to your Info.plist
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN">
 <plist version="1.0">
 <dict>
     ...
@@ -77,15 +77,16 @@ class AppDelegate: UIResponder, UIAppicationDelegate {
         <string>remote-notification</string>
     </array>
     ...
+</dict>
 ```
 
 ## Electron
-Have no plans to support for now.
+Have no plans to support yet.
 
 # Documentation
 ## [NotificationExtension](https://github.com/no-dap/capacitor-notification-extensions/blob/master/src/definitions.d.ts)  
 NotificationExtension class is child of default plugin PushNotification. You can check arguments and return of methods from the link above.  
-This plugin create a sqlite table `notification_extensions_filter` with its own schema.
+This plugin creates a sqlite table `notification_extensions_filter` with its own schema.
 
 ### Data notification payload
 - Android
@@ -94,22 +95,22 @@ This plugin create a sqlite table `notification_extensions_filter` with its own 
     Get data from `yourMessagePayload.apns.payload.aps.custom_data`. [(Check how payload parsed)](https://github.com/no-dap/capacitor-notification-extensions/blob/master/ios/Plugin/Plugin.swift#L53)  
   
 ---
-Both platforms' payload should contains keys below.
+Both platforms' payload should contain keys below.
 - isShown: Optional, boolean string('true' or 'false'), always true if not exists.
 - body: Optional, string, body of notification message
 - title: Optional, string, title of notification message
-- filter: Optional, comma-separated string, hide notifification if matched filter with false value exists.
+- filter: Optional, comma-separated string, hide notification if matched filter with false value exists.
 - Any other data you that want to use in your application
 
 ### Filters
-All key-value based filters which is added or removed by addFilters and removeFilters method will be saved in local database.  
+All key-value based filters which is added or removed by addFilters and removeFilters method will be saved in the local database.  
 There are two filters that specially checks before show notification, which is time-based filter and logged-in filter.  
 - logged-in filter  
-    If you add filter with key `is_logged_in`, this filter will be always checked on message received even if payload doesn't contains filter key.  
+    If you add a filter with key `is_logged_in`, this filter will always be checked on a message received even if payload doesn't contain filter key.  
 - time-based filter
-    If you add a filter with addTimeFilter method, three rows will be generated in local database. (filter_start_from, filter_end_at, is_time_filter_on)  
-    This filter will be always check on message received even if payload doesn't contains filter key.  
-    addTimeFilter method only 
+    If you add a filter with addTimeFilter method, three rows will be generated in the local database. (filter_start_from, filter_end_at, is_time_filter_on)  
+    This filter will always be checked on a message received even if payload doesn't contain filter key.  
+    addTimeFilter method only takes string with `HH:mm` format and will raise some validation error if is malformed.
 
 ### Usage
 In your js application,  
@@ -145,7 +146,7 @@ NotificationExtension.addTimeFilter({ startFrom: '23:00', endAt: '07:00' });
 
 ## LocalNotificationExtension  
 `LocalNotification.addListener('localNotificationReceived')` doesn't work in android if you use capacitor 2.x,  
-this class just a bug fix that only overrides a receiver to notify message received event to listener.  
+this class just a bug fix that only overrides a receiver to notify a message received event to listener.  
 (This will be solved in capacitor 3.x, [merged commit link](https://github.com/ionic-team/capacitor-plugins/pull/217/commits/a499ddf4f8729119550c55f9c44549d29cf544f4))
 Use this plugin for android only. (This class hasn't implemented for iOS)  
 
@@ -171,4 +172,4 @@ class YourServiceOrComponent {
 ```
 
 # Issue & Questionnaire
-Feel free to ask anything on project issues. Any kind of contribution and bug report also welcomed.
+Feel free to ask anything on project issues. Any kind of contributions and bug reports are also welcomed.
