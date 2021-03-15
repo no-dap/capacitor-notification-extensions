@@ -112,11 +112,11 @@ class SQLiteHandler {
         let queryResult: Array<[String: Any]> = runSelectQuery(sql: sql);
         if (queryResult.count > 0) {
             guard let result: String = queryResult[0]["value"] as? String else {
-                return false;
+                return true;
             }
             return result.boolValue
         } else {
-            return false
+            return true
         }
     }
     
