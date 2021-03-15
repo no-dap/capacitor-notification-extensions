@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.woot.notification.extensions
 
 import android.app.NotificationChannel

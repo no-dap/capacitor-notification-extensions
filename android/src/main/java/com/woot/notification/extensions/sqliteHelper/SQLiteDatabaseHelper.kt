@@ -23,7 +23,6 @@ import java.io.IOException
 import java.sql.Blob
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class SQLiteDatabaseHelper(
         private val context: Context,
@@ -39,7 +38,7 @@ class SQLiteDatabaseHelper(
     /**
      * Initialize SQLCipher
      */
-    private fun InitializeSQLCipher() {
+    private fun initializeSQLCipher() {
         Log.d(TAG, " in InitializeSQLCipher: ")
         SQLiteDatabase.loadLibs(context)
         var database: SQLiteDatabase? = null
@@ -658,6 +657,7 @@ class SQLiteDatabaseHelper(
      * @param jsonSQL
      * @return
      */
+    @Suppress("UNCHECKED_CAST")
     private fun createTableData(jsonSQL: JsonSQLite): Int {
         var success = true
         var changes = Integer.valueOf(-1)
@@ -1034,6 +1034,7 @@ class SQLiteDatabaseHelper(
      * @param sqlObj
      * @return
      */
+    @Suppress("UNCHECKED_CAST")
     private fun createJsonTables(sqlObj: JsonSQLite): JsonSQLite {
         var success = true
         val retObj = JsonSQLite()
@@ -1045,16 +1046,10 @@ class SQLiteDatabaseHelper(
             var stmt = "SELECT name,sql FROM sqlite_master WHERE type = 'table' "
             stmt += "AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'sync_table';"
             val tables = selectSQL(db, stmt, ArrayList())
-            if (tables.length() == 0) {
-                throw Exception("Error get table's names failed")
-            }
             var modTables = JSObject()
             var modTablesKeys = ArrayList<String?>()
             if (sqlObj.mode == "partial") {
                 syncDate = getSyncDate(db)
-                if (syncDate == -1L) {
-                    throw Exception("Error did not find a sync_date")
-                }
                 modTables = getTablesModified(db, tables, syncDate)
                 modTablesKeys = getJSObjectKeys(modTables)
             }
@@ -1270,6 +1265,6 @@ class SQLiteDatabaseHelper(
     }
 
     init {
-        InitializeSQLCipher()
+        initializeSQLCipher()
     }
 }
