@@ -169,3 +169,6 @@ class YourServiceOrComponent {
   }
 }
 ```
+
+# Issue & Questionnaire
+Feel free to ask anything on project issues. Any kind of contribution and bug report also welcomed.

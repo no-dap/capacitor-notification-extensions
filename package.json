@@ -1,6 +1,6 @@
 {
   "name": "capacitor-notification-extensions",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Extends capacitor PushNotifications plugin to handle received data notification",
   "main": "dist/plugin.js",
   "module": "dist/esm/index.js",
@@ -61,10 +61,10 @@
   "swiftlint": "@ionic/swiftlint-config",
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/wootdevelop/capacitor-notification-extensions"
+    "url": "https://github.com/no-dap/capacitor-notification-extensions"
   },
   "bugs": {
-    "url": "https://gitlab.com/wootdevelop/capacitor-notification-extensions/issues"
+    "url": "https://github.com/no-dap/capacitor-notification-extensions/issues"
   },
   "dependencies": {}
 }
