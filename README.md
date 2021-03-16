@@ -1,12 +1,20 @@
 # capacitor-notification-extensions  
+Github link: https://github.com/no-dap/capacitor-notification-extensions  
 Capacitor plugin with some features  
-- Handle data notification  
-- Client-side notification filtering (SQLite based)  
-    - Custom boolean filters  
-    - Time based filters  
-- Force-fire `localNotificationReceived` event listener which is not working properly in LocalNotification plugin  
+>- Background-handled data notification  
+>- Client-side notification filtering (SQLite based)  
+>    - Custom boolean filters  
+>    - Time based filters  
+>- Force-fire `localNotificationReceived` event listener which is not working properly  
+>  in LocalNotification plugin  
+>
+  
+Those features all works fine irrelevant with the app's state(on foreground, on background, or not on process).
 
 # Dependency
+![maintained](https://img.shields.io/badge/maintained-yes-green.svg?style=plastic)
+![license](https://img.shields.io/badge/license-MIT-green?style=plastic)
+![ionic-capacitor](https://img.shields.io/badge/capacitor-2.x-blue.svg?style=plastic)  
 Works fine with Capacitor 2.x  
 Not compatible with Capacitor 3.x  
 Use SQLite via Helper(from [capacitor sqlite plugin](https://github.com/capacitor-community/sqlite))  
@@ -78,6 +86,7 @@ class AppDelegate: UIResponder, UIAppicationDelegate {
     </array>
     ...
 </dict>
+</plist>
 ```
 
 ## Electron
@@ -85,14 +94,18 @@ Have no plans to support yet.
 
 # Documentation
 ## [NotificationExtension](https://github.com/no-dap/capacitor-notification-extensions/blob/master/src/definitions.d.ts)  
+>If you are new on firebase messaging, I recommend [reading this documentation](https://firebase.google.com/docs/cloud-messaging/concept-options) first to understand about two concepts of notification message.  
+> 
 NotificationExtension class is child of default plugin PushNotification. You can check arguments and return of methods from the link above.  
 This plugin creates a sqlite table `notification_extensions_filter` with its own schema.
 
 ### Data notification payload
-- Android
+Message in both platform shouldn't contain `notification` key which makes message as alert message.
+- Android  
     Get data from `yourMessagePayload.data`. [(Check how payload parsed)](https://github.com/no-dap/capacitor-notification-extensions/blob/master/android/src/main/java/com/woot/notification/extensions/FirebaseMessagingService.kt#L13)
-- iOS
+- iOS  
     Get data from `yourMessagePayload.apns.payload.aps.custom_data`. [(Check how payload parsed)](https://github.com/no-dap/capacitor-notification-extensions/blob/master/ios/Plugin/Plugin.swift#L53)  
+  
   
 ---
 Both platforms' payload should contain keys below.
@@ -121,10 +134,12 @@ const { NotificationExtension } = Plugins
 
 NotificationExtension.addListener('pushNotificationActionPerformed', (notification: PushNotificationActionPerformed) => {
   // Same as PushNotification plugin
+  // You can deal with your payload 
 });
 
 NotificationExtension.addListener('pushNotificationReceived', (notification: YourPayloadType) => {
   // Same as PushNotification plugin
+  // Only works when the app is on foreground
 });
 
 NotificationExtension.register();
