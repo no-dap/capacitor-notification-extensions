@@ -92,7 +92,7 @@ class SQLiteHandler(private var context: Context) {
                     .toString()
             return try {
                 val result = mdb.querySQL(statement, null).toList<JSObject>()[0]
-                !(result.get("value") as String).toBoolean()
+                (result.get("value") as String).toBoolean()
             } catch (error: IndexOutOfBoundsException) {
                 true
             }
