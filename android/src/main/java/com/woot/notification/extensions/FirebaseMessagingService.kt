@@ -16,7 +16,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val opened = sqLiteHandler.openDB()
         if (opened) {
             if (checkMessageCondition(remoteMessageData) && sqLiteHandler.isLoggedIn()) {
-                NotificationExtension().handleNotification(remoteMessage)
+                NotificationExtension.handleNotification(remoteMessage)
             } else {
                 Log.d(debugTag, "Push notification suppressed by filter")
             }

@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package com.woot.notification.extensions
 
 import android.app.NotificationChannel
@@ -8,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
-import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -97,68 +94,67 @@ class NotificationExtension : PushNotifications() {
         call.success()
     }
 
-    fun handleNotification(remoteMessage: RemoteMessage) {
-        val (notificationId, groupId) = getIds(remoteMessage)
-        val pendingIntent = buildNotificationPendingIntent(remoteMessage)
-        val notificationBuilder = buildNotification(
-                groupId,
-                NotificationCompat.BigTextStyle().bigText(remoteMessage.data["body"]),
-                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
-                pendingIntent)
-                .setContentTitle(remoteMessage.data["title"])
-                .setContentText(remoteMessage.data["body"])
-        createDefaultChannel()
-
-        val groupBuilder = buildNotification(groupId, NotificationCompat.InboxStyle())
-                .setGroupSummary(true)
-
-        NotificationManagerCompat.from(staticBridge.context).apply {
-            notify(notificationId, notificationBuilder.build())
-            notify(groupId, groupBuilder.build())
-        }
-    }
-
     companion object {
-        private fun buildNotification(
-                groupId: Int, style: NotificationCompat.Style, sound: Uri? = null, intent: PendingIntent? = null
-        ): NotificationCompat.Builder {
-            val builder = NotificationCompat.Builder(staticBridge.context, "default")
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setAutoCancel(true)
-                    .setGroup(groupId.toString())
-                    .setStyle(style)
-            if (sound != null) {
-                builder.setSound(sound)
+        private fun getPushNotificationsInstance(): NotificationExtension? {
+            if (staticBridge != null && staticBridge.webView != null) {
+                val handle = staticBridge.getPlugin("NotificationExtension") ?: return null
+                return handle.instance as NotificationExtension
             }
-            if (intent != null) {
-                builder.setContentIntent(intent)
-            }
-            return builder
+            return null
         }
 
-        private fun buildNotificationPendingIntent(remoteMessage: RemoteMessage): PendingIntent {
+        private fun sendRemoteMessage(remoteMessage: RemoteMessage) {
+            val pushPlugin = getPushNotificationsInstance()
+            if (pushPlugin != null) {
+                pushPlugin.fireNotification(remoteMessage)
+            } else {
+                lastMessage = remoteMessage
+            }
+        }
+
+        fun handleNotification(remoteMessage: RemoteMessage) {
+            val channelId = "default"
+            val notificationId = (remoteMessage.data["objectId"]
+                    ?: "0").toInt() + remoteMessage.data["code"]!!.toInt() + (remoteMessage.data["senderId"]
+                    ?: "0").toInt()
+            val groupId = remoteMessage.data["objectId"]!!.toInt() + remoteMessage.data["code"]!!.toInt()
+
             val intent = Intent(staticBridge.context, staticBridge.activity::class.java)
             intent.putExtras(remoteMessage.toIntent())
-            return PendingIntent.getActivity(staticBridge.context, 0, intent, PendingIntent.FLAG_ONE_SHOT)
-        }
+            val pendingIntent = PendingIntent.getActivity(staticBridge.context, 0, intent, PendingIntent.FLAG_ONE_SHOT)
 
-        private fun createDefaultChannel() {
+            val notificationBuilder = NotificationCompat.Builder(staticBridge.context, channelId)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle(remoteMessage.data["title"])
+                    .setContentText(remoteMessage.data["body"])
+                    .setAutoCancel(true)
+                    .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                    .setContentIntent(pendingIntent)
+                    .setGroup(groupId.toString())
+                    .setStyle(NotificationCompat.BigTextStyle()
+                            .bigText(remoteMessage.data["body"]))
+            val notificationManager = staticBridge.activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val notificationManager = staticBridge.activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 val channel = NotificationChannel(
-                        "default",
+                        channelId,
                         "default",
                         NotificationManager.IMPORTANCE_DEFAULT
                 )
                 notificationManager.createNotificationChannel(channel)
             }
-        }
+            val groupBuilder = NotificationCompat.Builder(staticBridge.context, channelId)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setAutoCancel(true)
+                    .setGroup(groupId.toString())
+                    .setGroupSummary(true)
+                    .setStyle(NotificationCompat.InboxStyle())
 
-        private fun getIds(remoteMessage: RemoteMessage): Pair<Int, Int> {
-            val objectId = (remoteMessage.data["objectId"] ?: "0").toInt()
-            val senderId = (remoteMessage.data["senderId"] ?: "0").toInt()
-            val code = (remoteMessage.data["code"] ?: "0").toInt()
-            return Pair(objectId + code + senderId, objectId + code)
+            NotificationManagerCompat.from(staticBridge.context).apply {
+                notify(notificationId, notificationBuilder.build())
+                notify(groupId, groupBuilder.build())
+            }
+
+            sendRemoteMessage(remoteMessage)
         }
     }
 }
