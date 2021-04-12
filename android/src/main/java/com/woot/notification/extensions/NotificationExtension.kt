@@ -27,6 +27,15 @@ class NotificationExtension : PushNotifications() {
         sqLiteHandler.createFilterTable()
     }
 
+    override fun fireNotification(remoteMessage: RemoteMessage) {
+        val remoteMessageData = JSObject()
+        for (key in remoteMessage.data.keys) {
+            val value: Any? = remoteMessage.data[key]
+            remoteMessageData.put(key, value)
+        }
+        notifyListeners("pushNotificationReceived", remoteMessageData, true)
+    }
+
     @PluginMethod
     fun getToken(call: PluginCall) {
         FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
