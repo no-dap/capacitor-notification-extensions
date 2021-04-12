@@ -1,6 +1,6 @@
 {
   "name": "capacitor-notification-extensions",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Extends capacitor PushNotifications plugin to handle received data notification",
   "main": "dist/plugin.js",
   "module": "dist/esm/index.js",
