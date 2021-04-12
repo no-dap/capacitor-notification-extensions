@@ -9,6 +9,8 @@ import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.getcapacitor.JSObject
 import com.getcapacitor.NativePlugin
 import com.getcapacitor.PluginCall
@@ -112,6 +114,10 @@ class NotificationExtension : PushNotifications() {
             return null
         }
 
+        private fun isApplicationActive(): Boolean {
+            return ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+        }
+
         private fun sendRemoteMessage(remoteMessage: RemoteMessage) {
             val pushPlugin = getPushNotificationsInstance()
             if (pushPlugin != null) {
@@ -122,48 +128,49 @@ class NotificationExtension : PushNotifications() {
         }
 
         fun handleNotification(remoteMessage: RemoteMessage) {
-            val channelId = "default"
-            val notificationId = (remoteMessage.data["objectId"]
-                    ?: "0").toInt() + remoteMessage.data["code"]!!.toInt() + (remoteMessage.data["senderId"]
-                    ?: "0").toInt()
-            val groupId = remoteMessage.data["objectId"]!!.toInt() + remoteMessage.data["code"]!!.toInt()
-
-            val intent = Intent(staticBridge.context, staticBridge.activity::class.java)
-            intent.putExtras(remoteMessage.toIntent())
-            val pendingIntent = PendingIntent.getActivity(staticBridge.context, 0, intent, PendingIntent.FLAG_ONE_SHOT)
-
-            val notificationBuilder = NotificationCompat.Builder(staticBridge.context, channelId)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle(remoteMessage.data["title"])
-                    .setContentText(remoteMessage.data["body"])
-                    .setAutoCancel(true)
-                    .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                    .setContentIntent(pendingIntent)
-                    .setGroup(groupId.toString())
-                    .setStyle(NotificationCompat.BigTextStyle()
-                            .bigText(remoteMessage.data["body"]))
-            val notificationManager = staticBridge.activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(
-                        channelId,
-                        "default",
-                        NotificationManager.IMPORTANCE_DEFAULT
-                )
-                notificationManager.createNotificationChannel(channel)
-            }
-            val groupBuilder = NotificationCompat.Builder(staticBridge.context, channelId)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setAutoCancel(true)
-                    .setGroup(groupId.toString())
-                    .setGroupSummary(true)
-                    .setStyle(NotificationCompat.InboxStyle())
-
-            NotificationManagerCompat.from(staticBridge.context).apply {
-                notify(notificationId, notificationBuilder.build())
-                notify(groupId, groupBuilder.build())
-            }
-
             sendRemoteMessage(remoteMessage)
+            if (!isApplicationActive()) {
+                val channelId = "default"
+                val notificationId = (remoteMessage.data["objectId"]
+                        ?: "0").toInt() + remoteMessage.data["code"]!!.toInt() + (remoteMessage.data["senderId"]
+                        ?: "0").toInt()
+                val groupId = remoteMessage.data["objectId"]!!.toInt() + remoteMessage.data["code"]!!.toInt()
+
+                val intent = Intent(staticBridge.context, staticBridge.activity::class.java)
+                intent.putExtras(remoteMessage.toIntent())
+                val pendingIntent = PendingIntent.getActivity(staticBridge.context, 0, intent, PendingIntent.FLAG_ONE_SHOT)
+
+                val notificationBuilder = NotificationCompat.Builder(staticBridge.context, channelId)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentTitle(remoteMessage.data["title"])
+                        .setContentText(remoteMessage.data["body"])
+                        .setAutoCancel(true)
+                        .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                        .setContentIntent(pendingIntent)
+                        .setGroup(groupId.toString())
+                        .setStyle(NotificationCompat.BigTextStyle()
+                                .bigText(remoteMessage.data["body"]))
+                val notificationManager = staticBridge.activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val channel = NotificationChannel(
+                            channelId,
+                            "default",
+                            NotificationManager.IMPORTANCE_DEFAULT
+                    )
+                    notificationManager.createNotificationChannel(channel)
+                }
+                val groupBuilder = NotificationCompat.Builder(staticBridge.context, channelId)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setAutoCancel(true)
+                        .setGroup(groupId.toString())
+                        .setGroupSummary(true)
+                        .setStyle(NotificationCompat.InboxStyle())
+
+                NotificationManagerCompat.from(staticBridge.context).apply {
+                    notify(notificationId, notificationBuilder.build())
+                    notify(groupId, groupBuilder.build())
+                }
+            }
         }
     }
 }
