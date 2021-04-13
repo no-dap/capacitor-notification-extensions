@@ -40,13 +40,19 @@ public class MainActivity extends BridgeActivity {
   }
 }
 ```
-2. Add meta data to manifest inside application tag and add db_name to string values.
+2. Add meta data and intent filter to manifest inside application tag and add db_name to string values.
 - AndroidManifest.xml
 ```xml
 <?xml version='1.0' encoding='utf-8'?>
 <manifest>
   <application...>
     ...
+    <activity ...>
+      <intent-filter>
+        <action android:name="com.woot.notification.extensions.intent.action.Launch" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
     <meta-data android:name="com.woot.notification.extensions.local_database_name" android:value="@string/db_name" />
   </application>
 </manifest>
