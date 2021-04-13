@@ -13,9 +13,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.getcapacitor.*
+import com.getcapacitor.JSObject
+import com.getcapacitor.NativePlugin
+import com.getcapacitor.PluginCall
+import com.getcapacitor.PluginMethod
 import com.getcapacitor.plugin.PushNotifications
-import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 
 @NativePlugin
@@ -45,9 +48,9 @@ class NotificationExtension : PushNotifications() {
 
     @PluginMethod
     fun getToken(call: PluginCall) {
-        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
+        FirebaseMessaging.getInstance().token.addOnSuccessListener {
             val ret = JSObject()
-            ret.put("value", it.token)
+            ret.put("value", it)
             call.success(ret)
         }
     }
@@ -203,7 +206,5 @@ class NotificationExtension : PushNotifications() {
                 lastMessage = remoteMessage
             }
         }
-
-
     }
 }
