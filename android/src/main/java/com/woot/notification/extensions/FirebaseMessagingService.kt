@@ -1,6 +1,7 @@
 package com.woot.notification.extensions
 
 import android.util.Log
+import androidx.annotation.WorkerThread
 import com.getcapacitor.JSObject
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -10,19 +11,21 @@ import java.util.*
 class FirebaseMessagingService : FirebaseMessagingService() {
     private val sqLiteHandler = SQLiteHandler(this)
 
+    @WorkerThread
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         val remoteMessageData = remoteMessage.data
         Log.d(debugTag, remoteMessageData.toString())
         val opened = sqLiteHandler.openDB()
         if (opened) {
             if (checkMessageCondition(remoteMessageData) && sqLiteHandler.isLoggedIn()) {
-                NotificationExtension.handleNotification(remoteMessage)
+                NotificationExtension.handleNotification(remoteMessage, this)
             } else {
                 Log.d(debugTag, "Push notification suppressed by filter")
             }
         }
     }
 
+    @WorkerThread
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d("token", token)
