@@ -154,7 +154,11 @@ class NotificationExtension : PushNotifications() {
         }
 
         private fun buildNotificationPendingIntent(remoteMessage: RemoteMessage, context: Context): PendingIntent? {
-            val intent = Intent()
+            val intent = if (staticBridge != null) {
+                Intent(staticBridge.context, staticBridge.activity::class.java)
+            } else {
+                Intent("com.woot.notification.extensions.intent.action.Launch")
+            }
             intent.putExtras(remoteMessage.toIntent())
             return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT)
         }
