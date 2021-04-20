@@ -296,14 +296,14 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         let isTimeFilterOnObject: Array<[String: Any]> = getFilteredData(filterString: "is_time_filter_on")
 
         // if there is no time filter or filterOn == false -> return true (can receive push-noti anytime)
-        if isTimeFilterOnObject.count >= 0 {
+        if isTimeFilterOnObject.count > 0 {
             if let timeFilterOn: String = isTimeFilterOnObject[0]["value"] as? String {
                 if timeFilterOn == "false" {
                     return true
                 }
             }
         }
-        if startTimeFilter.count != 0 && endTimeFilter.count != 0 {
+        if startTimeFilter.count > 0 && endTimeFilter.count > 0 {
             guard let startFrom: String = startTimeFilter[0]["value"] as? String,
                   let endAt: String = endTimeFilter[0]["value"] as? String else {
                 return false
