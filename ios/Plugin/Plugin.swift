@@ -51,6 +51,10 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
     }
     
     @objc func handleNotification(notification: Notification) -> Void {
+        let isLoggedIn: Bool = sqlHandler.isLoggedIn()
+        if (!isLoggedIn) {
+            return
+        }
         // extract push data. if there is no data, return.
         guard let notificationData: [String: Any] = notification.userInfo?["aps"] as? [String: Any] else {
             return
@@ -223,7 +227,6 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
             } else {
                 call.reject("Something when wrong")
             }
-            
         }
     }
     

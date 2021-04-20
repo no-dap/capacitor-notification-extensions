@@ -8,6 +8,12 @@
 import Foundation
 import SQLite3
 
+extension String {
+    var boolValue: Bool {
+        return (self as NSString).boolValue
+    }
+}
+
 class SQLiteHandler {
     var db: OpaquePointer?
     var isDbOpened = false
@@ -90,6 +96,28 @@ class SQLiteHandler {
             sql += tableName
         
         return runSelectQuery(sql: sql)
+    }
+
+    // MARK: - Check Is Logged In
+    func isLoggedIn() -> Bool {
+        if (!isDbOpened) {
+            print("Local database not opened yet.")
+            return false
+        }
+
+        var sql = "SELECT * FROM "
+            sql += tableName
+            sql += " WHERE key = 'is_logged_in';"
+        
+        let queryResult: Array<[String: Any]> = runSelectQuery(sql: sql);
+        if (queryResult.count > 0) {
+            guard let result: String = queryResult[0]["value"] as? String else {
+                return true;
+            }
+            return result.boolValue
+        } else {
+            return true
+        }
     }
     
     // MARK: - Add Time Filter
