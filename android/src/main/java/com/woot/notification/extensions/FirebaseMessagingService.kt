@@ -25,6 +25,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    // on created new firebase token
     @WorkerThread
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -35,6 +36,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         return Calendar.getInstance()
     }
 
+    // parse time to hh:mm. ex) 11:34
     @Throws(TimeParseException::class)
     private fun parseTime(input: String, checkNextDate: Boolean = false): Calendar {
         val ret = getTodayMidnight()
