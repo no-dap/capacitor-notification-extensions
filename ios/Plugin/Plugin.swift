@@ -35,6 +35,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
     
     let sqlHandler = SQLiteHandler()
 
+    // add observer for SilentNotification. onNotification() will be called when notification is arrived
     public override func load() {
         super.load()
         NotificationCenter.default.addObserver(
@@ -50,6 +51,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         handleNotification(notification: notification)
     }
     
+
     @objc func handleNotification(notification: Notification) -> Void {
         let isLoggedIn: Bool = sqlHandler.isLoggedIn()
         if (!isLoggedIn) {
@@ -69,6 +71,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
                     return
                 }
                 let content: UNMutableNotificationContent = self.getPushNotificationContent(notificationData, deliveredNotifications, identifier)
+                // set 3 seconds delay. 인터벌 안줬을 시, 씹히는 현상 때문에
                 let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3, repeats: false)
                 let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
                 
@@ -77,6 +80,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         }
     }
     
+    // get push code
     @objc func getIdentifier(_ data: [String: Any]) -> String? {
         if let identifier: String = data["code"] as? String {
             return identifier
@@ -282,6 +286,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         return !((startFromDate < currentDate) && (currentDate < endAtDate))
     }
 
+    // check current time is between start and end
     @objc func isValidTime() -> Bool {
         sqlHandler.createFilterTable()
         let timeFilters = sqlHandler.getTimeFilter()
@@ -357,6 +362,7 @@ public class NotificationExtension: CAPPushNotificationsPlugin {
         })
     }
     
+    // check should show or not the push message
     @objc func shouldMessageShown(_ remoteMessageData: [String: Any]) -> Bool {
         if let messageShown: String = remoteMessageData["isShown"] as? String {
             return messageShown == "true"
