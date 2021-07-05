@@ -25,6 +25,7 @@ import com.google.firebase.messaging.RemoteMessage
 class NotificationExtension : PushNotifications() {
     private lateinit var sqLiteHandler: SQLiteHandler
     override fun load() {
+        FirebaseMessaging.getInstance().setDeliveryMetricsExportToBigQuery(true)
         notificationManager = activity
                 .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         staticBridge = bridge
@@ -37,6 +38,7 @@ class NotificationExtension : PushNotifications() {
         sqLiteHandler.createFilterTable()
     }
 
+    // notify to listeners(js webview) 'pushNotificationReceived'
     override fun fireNotification(remoteMessage: RemoteMessage) {
         val remoteMessageData = JSObject()
         for (key in remoteMessage.data.keys) {
@@ -46,6 +48,7 @@ class NotificationExtension : PushNotifications() {
         notifyListeners("pushNotificationReceived", remoteMessageData, true)
     }
 
+    // get firebase token
     @PluginMethod
     fun getToken(call: PluginCall) {
         FirebaseMessaging.getInstance().token.addOnSuccessListener {
@@ -55,6 +58,7 @@ class NotificationExtension : PushNotifications() {
         }
     }
 
+    // get saved filters in sqlite
     @PluginMethod
     fun getFilters(call: PluginCall) {
         sqLiteHandler.openDB()
@@ -117,7 +121,9 @@ class NotificationExtension : PushNotifications() {
         fun handleNotification(remoteMessage: RemoteMessage, context: Context) {
             if (!isApplicationActive()) {
                 val (notificationId, groupId) = getIds(remoteMessage)
+                // build pending intent (intent = 화면 간 데이터 전달용 객체)
                 val pendingIntent = buildNotificationPendingIntent(remoteMessage, context)
+                // builld notification (푸시 노티 생성)
                 val notificationBuilder = buildNotification(
                         groupId,
                         NotificationCompat.BigTextStyle().bigText(remoteMessage.data["body"]),
@@ -128,6 +134,7 @@ class NotificationExtension : PushNotifications() {
                         .setContentText(remoteMessage.data["body"])
                 createDefaultChannel(context)
 
+                // 푸시 알림 그룹 만들기
                 val groupBuilder = buildNotification(groupId, NotificationCompat.InboxStyle(), context)
                         .setGroupSummary(true)
 
@@ -142,11 +149,13 @@ class NotificationExtension : PushNotifications() {
         private fun buildNotification(
                 groupId: Int, style: NotificationCompat.Style, context: Context, sound: Uri? = null, intent: PendingIntent? = null
         ): NotificationCompat.Builder {
-            val builder = NotificationCompat.Builder(context, "default")
+            val builder = NotificationCompat.Builder(context, context.getString(R.string.channel_name))
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .setAutoCancel(true)
                     .setGroup(groupId.toString())
                     .setStyle(style)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE)
             if (sound != null) {
                 builder.setSound(sound)
             }
@@ -163,16 +172,16 @@ class NotificationExtension : PushNotifications() {
                 Intent("com.woot.notification.extensions.intent.action.Launch")
             }
             intent.putExtras(remoteMessage.toIntent())
-            return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT)
+            return PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
         private fun createDefaultChannel(context: Context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 val channel = NotificationChannel(
-                        "default",
-                        "default",
-                        NotificationManager.IMPORTANCE_DEFAULT
+                        context.getString(R.string.channel_name),
+                        context.getString(R.string.channel_name),
+                        NotificationManager.IMPORTANCE_HIGH
                 )
                 notificationManager.createNotificationChannel(channel)
             }
