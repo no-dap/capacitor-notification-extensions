@@ -18,6 +18,7 @@ public class CAPPushNotificationsPlugin : CAPPlugin, UNUserNotificationCenterDel
     // center.delegate = self 를 통해 UNUserNotificationCenter 프로토콜의 두개의 userNotificationCenter(~) 함수를 가져다 쓸 수 있다.
     let center = UNUserNotificationCenter.current()
 
+    // add observer for remote notifications and failure
     public override func load() {
         center.delegate = self
         NotificationCenter.default.addObserver(self, selector: #selector(self.didRegisterForRemoteNotificationsWithDeviceToken(notification:)), name: Notification.Name(CAPNotifications.DidRegisterForRemoteNotificationsWithDeviceToken.name()), object: nil)
@@ -135,48 +136,48 @@ public class CAPPushNotificationsPlugin : CAPPlugin, UNUserNotificationCenterDel
     public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                        willPresent notification: UNNotification,
                                        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        let request = notification.request
-        var plugin: CAPPlugin
-        var action = "localNotificationReceived"
-        var presentationOptions: UNNotificationPresentationOptions = [];
+      let request = notification.request
+      var plugin: CAPPlugin
+      var action = "localNotificationReceived"
+      var presentationOptions: UNNotificationPresentationOptions = [];
 
-        var notificationData = makeNotificationRequestJSObject(request)
-        if (request.trigger?.isKind(of: UNPushNotificationTrigger.self) ?? false) {
-            plugin = (self.bridge?.getOrLoadPlugin(pluginName: "PushNotifications"))!
-            let options = plugin.getConfigValue("presentationOptions") as? [String] ?? ["badge"]
+      var notificationData = makeNotificationRequestJSObject(request)
+      if (request.trigger?.isKind(of: UNPushNotificationTrigger.self) ?? false) {
+        plugin = (self.bridge?.getOrLoadPlugin(pluginName: "PushNotifications"))!
+        let options = plugin.getConfigValue("presentationOptions") as? [String] ?? ["badge"]
 
-            action = "pushNotificationReceived"
-            if options.contains("alert") {
-              presentationOptions.update(with: .alert)
-            }
-            if options.contains("badge") {
-              presentationOptions.update(with: .badge)
-            }
-            if options.contains("sound") {
-              presentationOptions.update(with: .sound)
-            }
-            notificationData = makePushNotificationRequestJSObject(request)
-
-            } else {
-                plugin = (self.bridge?.getOrLoadPlugin(pluginName: "LocalNotifications"))!
-                presentationOptions = [
-                  .badge,
-                  .sound,
-                  .alert
-                ]
-            }
-
-            plugin.notifyListeners(action, data: notificationData)
-
-            if let options = notificationRequestLookup[request.identifier] {
-            let silent = options["silent"] as? Bool ?? false
-            if silent {
-              completionHandler(.init(rawValue:0))
-              return
-            }
+        action = "pushNotificationReceived"
+        if options.contains("alert") {
+          presentationOptions.update(with: .alert)
         }
+        if options.contains("badge") {
+          presentationOptions.update(with: .badge)
+        }
+        if options.contains("sound") {
+          presentationOptions.update(with: .sound)
+        }
+        notificationData = makePushNotificationRequestJSObject(request)
 
-        completionHandler(presentationOptions)
+      } else {
+        plugin = (self.bridge?.getOrLoadPlugin(pluginName: "LocalNotifications"))!
+        presentationOptions = [
+          .badge,
+          .sound,
+          .alert
+        ]
+      }
+
+      notifyListeners(action, data: notificationData)
+
+      if let options = notificationRequestLookup[request.identifier] {
+        let silent = options["silent"] as? Bool ?? false
+        if silent {
+          completionHandler(.init(rawValue:0))
+          return
+        }
+      }
+
+      completionHandler(presentationOptions)
     }
 
     /**
@@ -186,34 +187,37 @@ public class CAPPushNotificationsPlugin : CAPPlugin, UNUserNotificationCenterDel
     public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                        didReceive response: UNNotificationResponse,
                                        withCompletionHandler completionHandler: @escaping () -> Void) {
-        completionHandler()
-        var data = JSObject()
+      completionHandler()
+      var data = JSObject()
 
-        // Get the info for the original notification request
-        let originalNotificationRequest = response.notification.request
-        let actionId = response.actionIdentifier
+      // Get the info for the original notification request
+      let originalNotificationRequest = response.notification.request
+      let actionId = response.actionIdentifier
 
-        // We turn the two default actions (open/dismiss) into generic strings
-        if actionId == UNNotificationDefaultActionIdentifier {
-            data["actionId"] = "tap"
-        } else if actionId == UNNotificationDismissActionIdentifier {
-            data["actionId"] = "dismiss"
-        } else {
-            data["actionId"] = actionId
-        }
+      // We turn the two default actions (open/dismiss) into generic strings
+      if actionId == UNNotificationDefaultActionIdentifier {
+        data["actionId"] = "tap"
+      } else if actionId == UNNotificationDismissActionIdentifier {
+        data["actionId"] = "dismiss"
+      } else {
+        data["actionId"] = actionId
+      }
 
-        // If the type of action was for an input type, get the value
-        if let inputType = response as? UNTextInputNotificationResponse {
-            data["inputValue"] = inputType.userText
-        }
+      // If the type of action was for an input type, get the value
+      if let inputType = response as? UNTextInputNotificationResponse {
+        data["inputValue"] = inputType.userText
+      }
 
-        /**
-         * 기존 CAPUNUserNotificationCenterDelegate.swift에서 작성된 부분 수정
-         * 로컬에서 푸시 띄워주는거를 전부 localNotification으로 받아들이기에 강제로 pushaction으로 listener에게 알림.
-         */
-        let action = "pushNotificationActionPerformed"
+      var action = "localNotificationActionPerformed"
+
+      if (originalNotificationRequest.trigger?.isKind(of: UNPushNotificationTrigger.self) ?? false) {
         data["notification"] = makePushNotificationRequestJSObject(originalNotificationRequest)
-        notifyListeners(action, data: data)
+        action = "pushNotificationActionPerformed"
+      } else {
+        data["notification"] = makeNotificationRequestJSObject(originalNotificationRequest)
+      }
+
+      notifyListeners(action, data: data, retainUntilConsumed: true)
     }
 
     /**
